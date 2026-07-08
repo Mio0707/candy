@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>吹糖造物模型舞台</title>
+    <script type="module" src="./src/main.js"></script>
+  </head>
+  <body>
+    <main class="stage-shell">
+      <section class="stage-view" aria-label="模型舞台">
+        <div id="beast-stage"></div>
+        <div class="stage-loading" id="loading-panel">模型加载中...</div>
+      </section>
+
+      <aside class="stage-panel">
+        <p class="eyebrow">模型舞台测试</p>
+        <h1>吹糖造物</h1>
+        <p id="step-title" class="step-title">准备中</p>
+        <p id="step-description" class="step-description">
+          正在读取瑞兽模型。
+        </p>
+
+        <div class="controls">
+          <button id="prev-step" type="button">上一步</button>
+          <button id="next-step" type="button" class="primary">继续造物</button>
+          <button id="reset-stage" type="button">重置</button>
+          <button id="show-all" type="button">显示全部</button>
+        </div>
+
+        <div class="progress-list" id="progress-list"></div>
+
+        <details class="debug-panel" open>
+          <summary>部件检查</summary>
+          <pre id="part-report">等待模型加载...</pre>
+        </details>
+      </aside>
+    </main>
+  </body>
+</html>

@@ -1,0 +1,187 @@
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  overflow: hidden;
+  font-family:
+    "Microsoft YaHei",
+    "PingFang SC",
+    system-ui,
+    sans-serif;
+  color: #2a1510;
+  background: #f4eadf;
+}
+
+button {
+  font: inherit;
+}
+
+.stage-shell {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 360px;
+  width: 100vw;
+  height: 100vh;
+}
+
+.stage-view {
+  position: relative;
+  min-width: 0;
+  background:
+    radial-gradient(circle at 50% 45%, rgba(255, 244, 225, 0.96), rgba(228, 198, 169, 0.6) 48%, #d3a77e 100%);
+}
+
+#beast-stage {
+  width: 100%;
+  height: 100%;
+}
+
+#beast-stage canvas {
+  display: block;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.stage-loading {
+  position: absolute;
+  left: 24px;
+  top: 24px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  background: rgba(65, 32, 23, 0.86);
+  color: #fff8ed;
+}
+
+.stage-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  min-width: 0;
+  height: 100vh;
+  padding: 28px 24px;
+  overflow: auto;
+  background: #fff8ed;
+  border-left: 1px solid rgba(86, 42, 26, 0.16);
+}
+
+.eyebrow {
+  margin: 0;
+  color: #9e3526;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+h1 {
+  margin: -8px 0 0;
+  font-size: 34px;
+  line-height: 1.15;
+}
+
+.step-title {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 700;
+}
+
+.step-description {
+  min-height: 54px;
+  margin: -10px 0 0;
+  color: #6b4a39;
+  line-height: 1.7;
+}
+
+.controls {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.controls button,
+.progress-item {
+  min-height: 42px;
+  border: 1px solid rgba(99, 41, 24, 0.22);
+  border-radius: 8px;
+  color: #3a1b13;
+  background: #fff;
+  cursor: pointer;
+}
+
+.controls button:hover,
+.progress-item:hover {
+  border-color: rgba(157, 53, 38, 0.58);
+}
+
+.controls .primary {
+  color: #fff8ed;
+  background: #b93427;
+  border-color: #b93427;
+}
+
+.progress-list {
+  display: grid;
+  gap: 8px;
+}
+
+.progress-item {
+  width: 100%;
+  padding: 10px 12px;
+  text-align: left;
+}
+
+.progress-item.active {
+  color: #fff8ed;
+  background: #2f1b13;
+  border-color: #2f1b13;
+}
+
+.debug-panel {
+  margin-top: auto;
+  padding: 14px;
+  border: 1px solid rgba(99, 41, 24, 0.18);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.62);
+}
+
+.debug-panel summary {
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.debug-panel pre {
+  max-height: 220px;
+  margin: 12px 0 0;
+  overflow: auto;
+  color: #573525;
+  white-space: pre-wrap;
+}
+
+@media (max-width: 860px) {
+  body {
+    overflow: auto;
+  }
+
+  .stage-shell {
+    grid-template-columns: 1fr;
+    height: auto;
+    min-height: 100vh;
+  }
+
+  .stage-view {
+    height: 62vh;
+    min-height: 420px;
+  }
+
+  .stage-panel {
+    height: auto;
+    border-left: 0;
+    border-top: 1px solid rgba(86, 42, 26, 0.16);
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "scripts": {
+    "dev:stage": "vite --host 127.0.0.1",
+    "build:stage": "vite build --outDir dist-stage"
+  },
+  "dependencies": {
+    "@vitejs/plugin-basic-ssl": "^2.1.0",
+    "three": "^0.178.0",
+    "vite": "^7.0.0"
+  },
+  "devDependencies": {}
+}
