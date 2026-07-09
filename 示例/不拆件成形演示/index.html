@@ -1,0 +1,267 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>吹糖造物 - 不拆件成形演示</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        font-family: "Microsoft YaHei", "PingFang SC", system-ui, sans-serif;
+        background: #160b09;
+        color: #fff7df;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        overflow: hidden;
+        background:
+          radial-gradient(circle at 50% 12%, rgba(255, 196, 89, 0.22), transparent 30%),
+          radial-gradient(circle at 15% 72%, rgba(215, 34, 27, 0.18), transparent 28%),
+          linear-gradient(135deg, #1b0b08 0%, #2a120b 48%, #080403 100%);
+      }
+
+      #app {
+        display: grid;
+        grid-template-columns: 300px minmax(0, 1fr) 280px;
+        height: 100vh;
+      }
+
+      .panel {
+        z-index: 3;
+        padding: 24px;
+        background: rgba(20, 9, 6, 0.72);
+        backdrop-filter: blur(14px);
+        border-right: 1px solid rgba(255, 213, 128, 0.18);
+      }
+
+      .right {
+        border-right: 0;
+        border-left: 1px solid rgba(255, 213, 128, 0.18);
+      }
+
+      h1 {
+        margin: 0 0 8px;
+        font-size: 28px;
+        letter-spacing: 0;
+      }
+
+      .subtitle {
+        margin: 0 0 20px;
+        color: #ffd982;
+        font-size: 14px;
+      }
+
+      .stage-list {
+        display: grid;
+        gap: 10px;
+        margin: 24px 0;
+      }
+
+      .stage-item {
+        display: grid;
+        grid-template-columns: 28px 1fr;
+        align-items: center;
+        gap: 10px;
+        padding: 10px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 8px;
+        color: rgba(255, 247, 223, 0.62);
+        background: rgba(255, 255, 255, 0.04);
+      }
+
+      .stage-item.active {
+        color: #fff7df;
+        border-color: rgba(255, 210, 107, 0.7);
+        background: rgba(255, 181, 61, 0.14);
+      }
+
+      .index {
+        display: grid;
+        place-items: center;
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.08);
+        color: #ffd982;
+        font-size: 13px;
+      }
+
+      .active .index {
+        background: #d7261e;
+        color: white;
+      }
+
+      button {
+        width: 100%;
+        min-height: 46px;
+        border: 0;
+        border-radius: 8px;
+        color: white;
+        background: linear-gradient(135deg, #d7261e, #f2a025);
+        font-size: 16px;
+        font-weight: 700;
+        cursor: pointer;
+        box-shadow: 0 16px 36px rgba(215, 38, 30, 0.28);
+      }
+
+      button.secondary {
+        margin-top: 10px;
+        background: rgba(255, 255, 255, 0.1);
+        color: #fff7df;
+        box-shadow: none;
+      }
+
+      #viewport {
+        position: relative;
+        min-width: 0;
+      }
+
+      canvas {
+        display: block;
+      }
+
+      .hint {
+        position: absolute;
+        left: 50%;
+        bottom: 32px;
+        z-index: 2;
+        width: min(620px, calc(100% - 48px));
+        transform: translateX(-50%);
+        padding: 16px 20px;
+        border: 1px solid rgba(255, 219, 145, 0.28);
+        border-radius: 8px;
+        background: rgba(19, 8, 5, 0.76);
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.32);
+        text-align: center;
+      }
+
+      .hint strong {
+        display: block;
+        margin-bottom: 6px;
+        color: #ffd982;
+        font-size: 18px;
+      }
+
+      .hint span {
+        color: rgba(255, 247, 223, 0.78);
+        font-size: 14px;
+      }
+
+      .camera-box {
+        display: grid;
+        place-items: center;
+        height: 150px;
+        margin: 16px 0 20px;
+        border: 1px dashed rgba(255, 217, 130, 0.35);
+        border-radius: 8px;
+        color: rgba(255, 247, 223, 0.66);
+        background: rgba(255, 255, 255, 0.04);
+        text-align: center;
+        line-height: 1.6;
+      }
+
+      .note {
+        color: rgba(255, 247, 223, 0.7);
+        font-size: 13px;
+        line-height: 1.7;
+      }
+
+      .fortune-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+        margin: 16px 0 22px;
+      }
+
+      .fortune {
+        padding: 12px;
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.06);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        text-align: center;
+      }
+
+      .fortune.active {
+        border-color: #ffd982;
+        box-shadow: 0 0 22px rgba(255, 217, 130, 0.2);
+      }
+
+      .loading {
+        position: absolute;
+        inset: 0;
+        z-index: 5;
+        display: grid;
+        place-items: center;
+        background: #160b09;
+        color: #ffd982;
+      }
+
+      .hidden {
+        display: none;
+      }
+
+      @media (max-width: 960px) {
+        body {
+          overflow: auto;
+        }
+
+        #app {
+          grid-template-columns: 1fr;
+          grid-template-rows: auto 65vh auto;
+          height: auto;
+          min-height: 100vh;
+        }
+
+        .panel,
+        .right {
+          border: 0;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app">
+      <aside class="panel">
+        <h1>吹糖造物</h1>
+        <p class="subtitle">不拆件成形演示</p>
+        <div id="stageList" class="stage-list"></div>
+        <button id="nextButton">继续造物</button>
+        <button id="resetButton" class="secondary">重新开始</button>
+      </aside>
+
+      <main id="viewport">
+        <div id="loading" class="loading">正在加载完整瑞兽模型...</div>
+        <div class="hint">
+          <strong id="hintTitle">准备开始</strong>
+          <span id="hintText">这个示例不拆模型，只用灯光、透明度、粒子和镜头模拟成形。</span>
+        </div>
+      </main>
+
+      <aside class="panel right">
+        <h2>摄像头区域</h2>
+        <div class="camera-box">第一版可放摄像头预览<br />这里先用按钮模拟手势</div>
+        <h2>气运</h2>
+        <div id="fortuneGrid" class="fortune-grid"></div>
+        <p class="note">
+          灵感来自国家级非遗天门糖塑。本体验基于吹、捏、拉、贴等造型语言进行数字化互动表达，不是真实高温制作教学。
+        </p>
+      </aside>
+    </div>
+
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "https://unpkg.com/three@0.165.0/build/three.module.js",
+          "three/addons/": "https://unpkg.com/three@0.165.0/examples/jsm/"
+        }
+      }
+    </script>
+    <script type="module" src="./main.js"></script>
+  </body>
+</html>
