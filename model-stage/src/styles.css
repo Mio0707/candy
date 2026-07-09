@@ -125,6 +125,68 @@ h1 {
   border-color: #b93427;
 }
 
+.fortune-panel {
+  display: grid;
+  gap: 10px;
+  padding: 14px;
+  border: 1px solid rgba(185, 52, 39, 0.2);
+  border-radius: 8px;
+  background: rgba(255, 249, 238, 0.9);
+}
+
+.fortune-title {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.fortune-options {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+
+.fortune-option {
+  display: grid;
+  gap: 2px;
+  min-height: 58px;
+  padding: 8px 6px;
+  border: 1px solid rgba(99, 41, 24, 0.2);
+  border-radius: 8px;
+  color: #4a2115;
+  background: #fff;
+  cursor: pointer;
+}
+
+.fortune-option span {
+  font-size: 24px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.fortune-option small {
+  color: #7b5542;
+  font-size: 12px;
+}
+
+.fortune-option.active {
+  color: #fff8ed;
+  background: #b93427;
+  border-color: #b93427;
+}
+
+.fortune-option.active small {
+  color: rgba(255, 248, 237, 0.86);
+}
+
+.fortune-description {
+  min-height: 42px;
+  margin: 0;
+  color: #6b4a39;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
 .progress-list {
   display: grid;
   gap: 8px;

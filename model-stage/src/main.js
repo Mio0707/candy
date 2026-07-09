@@ -1,5 +1,5 @@
 import './styles.css';
-import { BeastStage, EXPERIENCE_STEPS } from './BeastStage.js';
+import { BeastStage, EXPERIENCE_STEPS, FORTUNES } from './BeastStage.js';
 import modelUrl from '../../models/hulushi-web.glb?url';
 
 const stageElement = document.querySelector('#beast-stage');
@@ -8,6 +8,10 @@ const titleElement = document.querySelector('#step-title');
 const descriptionElement = document.querySelector('#step-description');
 const progressList = document.querySelector('#progress-list');
 const partReport = document.querySelector('#part-report');
+const fortunePanel = document.querySelector('#fortune-panel');
+const fortuneOptions = document.querySelector('#fortune-options');
+const fortuneDescription = document.querySelector('#fortune-description');
+const nextButton = document.querySelector('#next-step');
 
 const stage = new BeastStage(stageElement, {
   modelUrl,
@@ -39,14 +43,53 @@ function renderReport(report) {
   ].join('\n');
 }
 
+function renderFortunes(state) {
+  const shouldShow = ['fortune-select', 'lift-blessing', 'fortune-shell', 'blessing-complete'].includes(
+    state.step.id,
+  );
+  fortunePanel.hidden = !shouldShow;
+
+  if (!shouldShow) return;
+
+  const selectedFortune = state.selectedFortune ?? FORTUNES[0];
+  fortuneOptions.replaceChildren(
+    ...FORTUNES.map((fortune) => {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = fortune.id === selectedFortune.id ? 'fortune-option active' : 'fortune-option';
+      button.dataset.fortune = fortune.id;
+      button.innerHTML = `<span>${fortune.label}</span><small>${fortune.name}</small>`;
+      button.addEventListener('click', () => stage.selectFortune(fortune.id));
+      return button;
+    }),
+  );
+  fortuneDescription.textContent = selectedFortune.description;
+}
+
+function renderNextButton(step) {
+  if (step.id === 'fortune-select') {
+    nextButton.textContent = '默认选择“顺”';
+  } else if (step.id === 'lift-blessing') {
+    nextButton.textContent = '托起加持';
+  } else if (step.id === 'fortune-shell') {
+    nextButton.textContent = '捏拳吸收';
+  } else if (step.id === 'blessing-complete') {
+    nextButton.textContent = '已完成';
+  } else {
+    nextButton.textContent = '继续造物';
+  }
+}
+
 function renderState(state) {
   titleElement.textContent = state.step.title;
   descriptionElement.textContent = state.step.description;
+  renderNextButton(state.step);
+  renderFortunes(state);
   renderProgress(state);
   renderReport(state.report);
 }
 
-document.querySelector('#next-step').addEventListener('click', () => stage.next());
+nextButton.addEventListener('click', () => stage.next());
 document.querySelector('#prev-step').addEventListener('click', () => stage.prev());
 document.querySelector('#reset-stage').addEventListener('click', () => stage.reset());
 document.querySelector('#show-all').addEventListener('click', () => stage.showAll());
