@@ -134,6 +134,10 @@ h1 {
   background: rgba(255, 249, 238, 0.9);
 }
 
+.fortune-panel[hidden] {
+  display: none;
+}
+
 .fortune-title {
   margin: 0;
   font-size: 15px;

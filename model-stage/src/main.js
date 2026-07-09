@@ -70,9 +70,9 @@ function renderNextButton(step) {
   if (step.id === 'fortune-select') {
     nextButton.textContent = '默认选择“顺”';
   } else if (step.id === 'lift-blessing') {
-    nextButton.textContent = '托起加持';
+    nextButton.textContent = '托起祝福';
   } else if (step.id === 'fortune-shell') {
-    nextButton.textContent = '捏拳吸收';
+    nextButton.textContent = '收下祝福';
   } else if (step.id === 'blessing-complete') {
     nextButton.textContent = '已完成';
   } else {
