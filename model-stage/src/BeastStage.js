@@ -6,32 +6,33 @@ const MODEL_DISPLAY_ROTATION_Y = -Math.PI / 3;
 const BALL_PICKUP_OFFSET = [0, 0.68, -0.45];
 const POINT_CLOUD_COUNT = 3600;
 const BLESSING_POINT_CLOUD_COUNT = 10800;
-const POINT_CLOUD_GATHER_DURATION = 1.8;
-const PARTICLE_TRAIL_LENGTH = 0.075;
+const POINT_CLOUD_GATHER_DURATION = 2.35;
+const POINT_CLOUD_STAGGER_DURATION = 0.62;
+const PARTICLE_TRAIL_LENGTH = 0.18;
 const BLESSING_ROTATION_SPEED = 0.208;
+const TWO_PI = Math.PI * 2;
 const DEFAULT_STAGE_BACKGROUND = 0xf6efe6;
 const BLESSING_STAGE_BACKGROUND = 0x050403;
-const PART_POINT_COLORS = {
-  base: 0xd73327,
-  body_core: 0x1d1711,
-  front_legs: 0x1d1711,
-  back_legs: 0x1d1711,
-  back_mustache: 0xf1bc36,
-  head: 0xd73327,
-  tail_ears_1: 0xf1bc36,
-  tail_ears_2: 0xd73327,
-  head_lines: 0x38a848,
-  ball: 0xd73327,
-};
 
 export const FORTUNES = [
-  { id: 'shun', label: '顺', name: '顺遂', color: 0x38a848, description: '绿色祝福向上流动，寓意顺遂。' },
-  { id: 'xi', label: '喜', name: '喜乐', color: 0xf1bc36, description: '金黄色祝福跳动散开，寓意喜乐。' },
-  { id: 'yong', label: '勇', name: '镇护', color: 0x1d1711, accentColor: 0xd9a52d, description: '黑金祝福环绕聚拢，寓意镇护。' },
-  { id: 'wang', label: '旺', name: '兴旺', color: 0xd73327, description: '红色祝福围绕圆球旋转，寓意兴旺。' },
+  { id: 'shun', label: '顺', name: '顺遂', color: 0x38a848, description: '绿色光流从底部升起，再落下汇成瑞兽轮廓。' },
+  { id: 'xi', label: '喜', name: '喜乐', color: 0xf1bc36, description: '金黄色光流从底部升起，再落下汇成瑞兽轮廓。' },
+  { id: 'yong', label: '勇', name: '镇护', color: 0xffffff, description: '纯白光流从底部升起，再落下汇成瑞兽轮廓。' },
+  { id: 'wang', label: '旺', name: '兴旺', color: 0xd73327, description: '红色光流从底部升起，再落下汇成瑞兽轮廓。' },
 ];
 
 const DEFAULT_FORTUNE_ID = 'shun';
+const DEFAULT_PARTICLE_PROFILE = {
+  size: 0.028,
+  opacity: 0.92,
+  trailLength: PARTICLE_TRAIL_LENGTH,
+  groupFloat: 0.01,
+  groupSway: 0.018,
+};
+const PART_PARTICLE_WEIGHTS = {
+  head: 2,
+  head_lines: 0.3,
+};
 
 export const EXPERIENCE_STEPS = [
   {
@@ -287,7 +288,6 @@ export const EXPERIENCE_STEPS = [
     description: '瑞兽短暂化成由祝福粒子组成的轮廓。捏拳收拢，把这份祝福带走。',
     frontView: true,
     ethereal: true,
-    lifted: true,
     blessingSpin: true,
     visibleGroups: [
       'base',
@@ -351,10 +351,10 @@ export class BeastStage extends EventTarget {
     this.activeTransitions = new Map();
     this.showcaseSpin = null;
     this.selectedFortune = null;
-    this.liftAnimation = null;
     this.absorbAnimation = null;
     this.blessingParticles = null;
     this.clock = new THREE.Clock();
+    this.particleTexture = this.createParticleTexture();
 
     this.scene = new THREE.Scene();
     this.scene.background = new THREE.Color(DEFAULT_STAGE_BACKGROUND);
@@ -383,6 +383,24 @@ export class BeastStage extends EventTarget {
     this.resizeObserver.observe(this.container);
     this.resize();
     this.animate();
+  }
+
+  createParticleTexture() {
+    const canvas = document.createElement('canvas');
+    canvas.width = 64;
+    canvas.height = 64;
+    const context = canvas.getContext('2d');
+    const gradient = context.createRadialGradient(32, 32, 0, 32, 32, 32);
+
+    gradient.addColorStop(0, 'rgba(255, 255, 255, 1)');
+    gradient.addColorStop(0.35, 'rgba(255, 255, 255, 0.82)');
+    gradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
+    context.fillStyle = gradient;
+    context.fillRect(0, 0, 64, 64);
+
+    const texture = new THREE.CanvasTexture(canvas);
+    texture.colorSpace = THREE.SRGBColorSpace;
+    return texture;
   }
 
   setupLights() {
@@ -450,10 +468,9 @@ export class BeastStage extends EventTarget {
     const blessingStartIndex = EXPERIENCE_STEPS.findIndex((item) => item.id === 'fortune-select');
     this.activeTransitions.clear();
     this.showcaseSpin = null;
-    this.liftAnimation = null;
     this.absorbAnimation = null;
     this.clearBlessingParticles();
-    this.modelRoot.position.y = step.lifted ? 0.24 : 0;
+    this.modelRoot.position.y = 0;
     this.scene.background = new THREE.Color(
       this.stepIndex >= blessingStartIndex ? BLESSING_STAGE_BACKGROUND : DEFAULT_STAGE_BACKGROUND,
     );
@@ -601,7 +618,8 @@ export class BeastStage extends EventTarget {
     }
 
     if (step.id === 'lift-blessing') {
-      this.startBlessing();
+      if (!this.selectedFortune) this.selectedFortune = FORTUNES[0];
+      this.setStep(this.stepIndex + 1);
       return;
     }
 
@@ -638,70 +656,89 @@ export class BeastStage extends EventTarget {
     }
   }
 
-  startBlessing() {
-    if (!this.selectedFortune) {
-      this.selectedFortune = FORTUNES[0];
-    }
+  getFortuneParticleProfile() {
+    return { ...DEFAULT_PARTICLE_PROFILE };
+  }
 
-    this.liftAnimation = {
-      start: this.clock.getElapsedTime(),
-      duration: 2.4,
-      fromY: this.modelRoot.position.y,
-      toY: 0.24,
+  getBlessingParticleOrigin({ center, radius, theta, targetX, targetZ }) {
+    const sourceSpread = radius * (0.36 + Math.random() * 0.28);
+
+    return {
+      x: THREE.MathUtils.lerp(center.x + Math.cos(theta) * sourceSpread, targetX, 0.16),
+      y: center.y - radius * (1.18 + Math.random() * 0.36),
+      z: THREE.MathUtils.lerp(center.z + Math.sin(theta) * sourceSpread, targetZ, 0.16),
     };
-    this.setModelEthereal(true);
+  }
+
+  getBlessingParticleApex({ center, radius, theta, origin, targetX, targetY, targetZ }) {
+    const arcSpread = radius * (0.18 + Math.random() * 0.2);
+
+    return {
+      x: THREE.MathUtils.lerp(origin.x, targetX, 0.45) + Math.cos(theta * 1.31) * arcSpread,
+      y: Math.max(targetY, center.y) + radius * (1.05 + Math.random() * 0.48),
+      z: THREE.MathUtils.lerp(origin.z, targetZ, 0.45) + Math.sin(theta * 1.17) * arcSpread,
+    };
   }
 
   createBlessingParticles(options = {}) {
     this.clearBlessingParticles();
 
     const fortune = this.selectedFortune ?? FORTUNES[0];
-    const colorBlend = options.colorBlend ?? 0.42;
-    const particleSize = options.particleSize ?? 0.026;
-    const particleOpacity = options.opacity ?? 0.9;
+    const profile = this.getFortuneParticleProfile();
+    const particleSize = options.particleSize ?? profile.size;
+    const particleOpacity = options.opacity ?? profile.opacity;
     const particleBlending = options.blending ?? THREE.AdditiveBlending;
     const hasTrails = options.trails ?? true;
     const sample = this.sampleModelSurfacePoints(options.count ?? POINT_CLOUD_COUNT);
-    const { targets, meshColors, center, radius } = sample;
+    const { targets, center, radius } = sample;
     const count = targets.length / 3;
     const positions = new Float32Array(count * 3);
     const colors = new Float32Array(count * 3);
     const origins = new Float32Array(count * 3);
+    const apexes = new Float32Array(count * 3);
     const seeds = [];
-    const fortuneColor = new THREE.Color(fortune.accentColor ?? fortune.color);
+    const particleColor = new THREE.Color(fortune.color);
 
     for (let index = 0; index < count; index += 1) {
       const x = targets[index * 3];
       const y = targets[index * 3 + 1];
       const z = targets[index * 3 + 2];
       const theta = index * 2.399963 + Math.random() * 0.42;
-      const spread = radius * (1.35 + Math.random() * 0.75);
-      const height = (Math.random() - 0.5) * radius * 2.1;
-      const swirl = 0.18 + Math.random() * 0.82;
-      const originX = center.x + Math.cos(theta) * spread * swirl;
-      const originY = center.y + height;
-      const originZ = center.z + Math.sin(theta) * spread * swirl;
-      const meshColor = new THREE.Color(
-        meshColors[index * 3],
-        meshColors[index * 3 + 1],
-        meshColors[index * 3 + 2],
-      );
-      meshColor.lerp(fortuneColor, colorBlend);
+      const origin = this.getBlessingParticleOrigin({
+        center,
+        radius,
+        theta,
+        targetX: x,
+        targetZ: z,
+      });
+      const apex = this.getBlessingParticleApex({
+        center,
+        radius,
+        theta,
+        origin,
+        targetX: x,
+        targetY: y,
+        targetZ: z,
+      });
 
-      origins[index * 3] = originX;
-      origins[index * 3 + 1] = originY;
-      origins[index * 3 + 2] = originZ;
-      positions[index * 3] = originX;
-      positions[index * 3 + 1] = originY;
-      positions[index * 3 + 2] = originZ;
-      colors[index * 3] = meshColor.r;
-      colors[index * 3 + 1] = meshColor.g;
-      colors[index * 3 + 2] = meshColor.b;
+      origins[index * 3] = origin.x;
+      origins[index * 3 + 1] = origin.y;
+      origins[index * 3 + 2] = origin.z;
+      apexes[index * 3] = apex.x;
+      apexes[index * 3 + 1] = apex.y;
+      apexes[index * 3 + 2] = apex.z;
+      positions[index * 3] = origin.x;
+      positions[index * 3 + 1] = origin.y;
+      positions[index * 3 + 2] = origin.z;
+      colors[index * 3] = particleColor.r;
+      colors[index * 3 + 1] = particleColor.g;
+      colors[index * 3 + 2] = particleColor.b;
       seeds.push({
-        phase: Math.random() * Math.PI * 2,
-        speed: 0.7 + Math.random() * 0.7,
+        phase: Math.random() * TWO_PI,
+        speed: 0.62 + Math.random() * 0.58,
         drift: 0.018 + Math.random() * 0.028,
-        delay: Math.random() * 0.35,
+        delay: Math.random() * POINT_CLOUD_STAGGER_DURATION,
+        trailScale: 0.85 + Math.random() * 0.72,
       });
     }
 
@@ -711,8 +748,10 @@ export class BeastStage extends EventTarget {
 
     const material = new THREE.PointsMaterial({
       size: particleSize,
+      map: this.particleTexture,
       transparent: true,
       opacity: particleOpacity,
+      alphaTest: 0.02,
       depthWrite: false,
       vertexColors: true,
       blending: particleBlending,
@@ -729,7 +768,9 @@ export class BeastStage extends EventTarget {
       trail,
       seeds,
       fortune,
+      profile,
       origins,
+      apexes,
       targets,
       center,
       radius,
@@ -779,16 +820,15 @@ export class BeastStage extends EventTarget {
   sampleModelSurfacePoints(count) {
     const visibleMeshes = [...this.parts.values()].filter((part) => part.visible && part.geometry);
     const targets = new Float32Array(count * 3);
-    const meshColors = new Float32Array(count * 3);
     const vector = new THREE.Vector3();
-    const color = new THREE.Color();
     const bounds = new THREE.Box3();
     const meshBounds = new THREE.Box3();
+    const weightedMeshes = [];
+    let totalWeight = 0;
 
     if (visibleMeshes.length === 0) {
       return {
         targets,
-        meshColors,
         center: new THREE.Vector3(),
         radius: 1,
       };
@@ -797,6 +837,10 @@ export class BeastStage extends EventTarget {
     this.modelRoot.updateWorldMatrix(true, true);
     for (const mesh of visibleMeshes) {
       bounds.union(meshBounds.setFromObject(mesh));
+      const weight = PART_PARTICLE_WEIGHTS[mesh.name] ?? 1;
+      if (weight <= 0) continue;
+      totalWeight += weight;
+      weightedMeshes.push({ mesh, totalWeight });
     }
 
     const center = bounds.getCenter(new THREE.Vector3());
@@ -804,32 +848,25 @@ export class BeastStage extends EventTarget {
     const radius = Math.max(size.x, size.y, size.z, 1);
 
     for (let index = 0; index < count; index += 1) {
-      const mesh = visibleMeshes[Math.floor(Math.random() * visibleMeshes.length)];
+      const pick = Math.random() * totalWeight;
+      const mesh = weightedMeshes.find((item) => pick <= item.totalWeight)?.mesh
+        ?? weightedMeshes[weightedMeshes.length - 1].mesh;
       const positions = mesh.geometry.attributes.position;
       const vertexIndex = Math.floor(Math.random() * positions.count);
 
       vector.fromBufferAttribute(positions, vertexIndex);
       mesh.localToWorld(vector);
-      color.copy(this.getMeshPointColor(mesh));
 
       targets[index * 3] = vector.x;
       targets[index * 3 + 1] = vector.y;
       targets[index * 3 + 2] = vector.z;
-      meshColors[index * 3] = color.r;
-      meshColors[index * 3 + 1] = color.g;
-      meshColors[index * 3 + 2] = color.b;
     }
 
     return {
       targets,
-      meshColors,
       center,
       radius,
     };
-  }
-
-  getMeshPointColor(mesh) {
-    return new THREE.Color(PART_POINT_COLORS[mesh.name] ?? 0xfff0c8);
   }
 
   startAbsorbFortune() {
@@ -840,19 +877,39 @@ export class BeastStage extends EventTarget {
     const positions = this.blessingParticles.points.geometry.attributes.position.array;
     const origins = new Float32Array(positions);
     const targets = new Float32Array(positions.length);
-    const handTarget = new THREE.Vector3(0.28, -0.62, 1.28);
+    const seeds = [];
+    const { center, radius } = this.blessingParticles;
 
     for (let index = 0; index < positions.length / 3; index += 1) {
-      targets[index * 3] = handTarget.x + (Math.random() - 0.5) * 0.16;
-      targets[index * 3 + 1] = handTarget.y + (Math.random() - 0.5) * 0.12;
-      targets[index * 3 + 2] = handTarget.z + (Math.random() - 0.5) * 0.18;
+      const originX = origins[index * 3];
+      const originY = origins[index * 3 + 1];
+      const originZ = origins[index * 3 + 2];
+      const angle = index * 2.399963 + Math.random() * 0.55;
+      const vertical = 0.18 + Math.random() * 0.58;
+      const direction = new THREE.Vector3(
+        (originX - center.x) * 0.55 + Math.cos(angle) * radius * 0.62,
+        (originY - center.y) * 0.22 + vertical * radius,
+        (originZ - center.z) * 0.55 + Math.sin(angle) * radius * 0.62,
+      ).normalize();
+      const distance = radius * (0.62 + Math.random() * 0.62);
+
+      targets[index * 3] = originX + direction.x * distance;
+      targets[index * 3 + 1] = originY + direction.y * distance;
+      targets[index * 3 + 2] = originZ + direction.z * distance;
+      seeds.push({
+        phase: Math.random() * TWO_PI,
+        delay: Math.random() * 0.28,
+        swirl: (Math.random() < 0.5 ? -1 : 1) * (0.08 + Math.random() * 0.16),
+        lift: radius * (0.08 + Math.random() * 0.18),
+      });
     }
 
     this.absorbAnimation = {
       start: this.clock.getElapsedTime(),
-      duration: 1.45,
+      duration: 1.95,
       origins,
       targets,
+      seeds,
     };
   }
 
@@ -892,7 +949,7 @@ export class BeastStage extends EventTarget {
     for (const [material, original] of this.materialStates) {
       if (enabled) {
         material.transparent = true;
-        material.opacity = 0.06;
+        material.opacity = 0;
         material.depthWrite = false;
       } else {
         material.transparent = original.transparent;
@@ -938,38 +995,16 @@ export class BeastStage extends EventTarget {
     const step = EXPERIENCE_STEPS[this.stepIndex];
     this.updateModelRotation(elapsed, step);
     this.updateTransitions(elapsed);
-    this.updateLiftAnimation(elapsed);
     this.updateBlessingParticles(elapsed);
     this.updateAbsorbAnimation(elapsed);
     this.controls.update();
     this.renderer.render(this.scene, this.camera);
   };
 
-  updateLiftAnimation(elapsed) {
-    if (!this.liftAnimation) return;
-
-    const progress = THREE.MathUtils.clamp(
-      (elapsed - this.liftAnimation.start) / this.liftAnimation.duration,
-      0,
-      1,
-    );
-    const eased = progress * progress * (3 - 2 * progress);
-    this.modelRoot.position.y = THREE.MathUtils.lerp(
-      this.liftAnimation.fromY,
-      this.liftAnimation.toY,
-      eased,
-    );
-
-    if (progress >= 1) {
-      this.liftAnimation = null;
-      this.setStep(this.stepIndex + 1);
-    }
-  }
-
   updateBlessingParticles(elapsed) {
     if (!this.blessingParticles || this.absorbAnimation || this.blessingParticles.mode === 'dissolve') return;
 
-    const { points, trail, seeds, origins, targets, start, radius } = this.blessingParticles;
+    const { points, trail, seeds, origins, apexes, targets, start, radius, profile } = this.blessingParticles;
     const positions = points.geometry.attributes.position.array;
     const trailPositions = trail?.geometry.attributes.position.array;
     const time = elapsed - start;
@@ -981,14 +1016,18 @@ export class BeastStage extends EventTarget {
         0,
         1,
       );
-      const eased = 1 - Math.pow(1 - progress, 3);
-      const wave = Math.sin(time * seed.speed + seed.phase) * seed.drift;
-      const pulse = Math.cos(time * seed.speed * 0.8 + seed.phase) * seed.drift;
-      const spiral = Math.sin(progress * Math.PI) * 0.16 * radius;
-      const angle = seed.phase + time * (0.7 + seed.speed * 0.18);
+      const eased = progress < 0.5
+        ? 2 * progress * progress
+        : 1 - Math.pow(-2 * progress + 2, 2) / 2;
+      const settle = Math.min(1, Math.max(0, (progress - 0.78) / 0.22));
+      const wave = Math.sin(time * seed.speed + seed.phase) * seed.drift * (1 - settle * 0.72);
+      const sideDrift = Math.cos(time * seed.speed * 0.78 + seed.phase) * seed.drift * 0.64 * (1 - settle);
       const originX = origins[index * 3];
       const originY = origins[index * 3 + 1];
       const originZ = origins[index * 3 + 2];
+      const apexX = apexes[index * 3];
+      const apexY = apexes[index * 3 + 1];
+      const apexZ = apexes[index * 3 + 2];
       const targetX = targets[index * 3];
       const targetY = targets[index * 3 + 1];
       const targetZ = targets[index * 3 + 2];
@@ -996,15 +1035,21 @@ export class BeastStage extends EventTarget {
       const previousX = positions[index * 3];
       const previousY = positions[index * 3 + 1];
       const previousZ = positions[index * 3 + 2];
-      const nextX = THREE.MathUtils.lerp(originX, targetX, eased)
-        + Math.cos(angle) * spiral
-        + wave;
-      const nextY = THREE.MathUtils.lerp(originY, targetY, eased)
-        + pulse
-        + Math.sin(angle * 0.7) * spiral * 0.22;
-      const nextZ = THREE.MathUtils.lerp(originZ, targetZ, eased)
-        + Math.sin(angle) * spiral
-        - wave;
+      const inv = 1 - eased;
+      let nextX = inv * inv * originX + 2 * inv * eased * apexX + eased * eased * targetX;
+      let nextY = inv * inv * originY + 2 * inv * eased * apexY + eased * eased * targetY;
+      let nextZ = inv * inv * originZ + 2 * inv * eased * apexZ + eased * eased * targetZ;
+
+      nextX += wave;
+      nextY += Math.sin(time * seed.speed * 1.2 + seed.phase) * seed.drift * 0.42 * (1 - settle);
+      nextZ += sideDrift;
+
+      if (progress >= 1) {
+        const surfaceShimmer = Math.sin(time * 2.4 + seed.phase) * seed.drift * 0.22;
+        nextX = targetX + surfaceShimmer;
+        nextY = targetY + Math.cos(time * 1.7 + seed.phase) * seed.drift * 0.18;
+        nextZ = targetZ - surfaceShimmer;
+      }
 
       positions[index * 3] = nextX;
       positions[index * 3 + 1] = nextY;
@@ -1015,7 +1060,7 @@ export class BeastStage extends EventTarget {
         const dy = nextY - previousY;
         const dz = nextZ - previousZ;
         const length = Math.hypot(dx, dy, dz) || 1;
-        const trailLength = PARTICLE_TRAIL_LENGTH * (0.45 + progress * 0.75);
+        const trailLength = profile.trailLength * seed.trailScale * (0.6 + Math.sin(progress * Math.PI) * 0.85);
         const lineOffset = index * 6;
 
         trailPositions[lineOffset] = nextX;
@@ -1027,17 +1072,21 @@ export class BeastStage extends EventTarget {
       }
     }
 
-    points.material.opacity = THREE.MathUtils.lerp(0.28, 0.9, Math.min(1, time / 0.9));
-    points.rotation.y = Math.sin(time * 0.42) * 0.025;
-    points.position.y = Math.sin(time * 0.8) * 0.012;
+    points.material.opacity = THREE.MathUtils.lerp(0.24, profile.opacity, Math.min(1, time / 0.9));
+    points.rotation.y = Math.sin(time * 0.42) * profile.groupSway;
+    points.position.y = Math.sin(time * 0.8) * profile.groupFloat;
     if (trail) {
       const trailEnter = Math.min(1, time / 0.55);
       const trailExit = 1 - THREE.MathUtils.clamp(
-        (time - POINT_CLOUD_GATHER_DURATION) / 0.65,
+        (time - POINT_CLOUD_GATHER_DURATION - POINT_CLOUD_STAGGER_DURATION) / 1.05,
         0,
         1,
       );
-      trail.material.opacity = THREE.MathUtils.lerp(0.16, 0.42, trailEnter) * trailExit;
+      trail.material.opacity = THREE.MathUtils.lerp(
+        0.14,
+        Math.min(0.58, profile.opacity * 0.62),
+        trailEnter,
+      ) * trailExit;
       trail.rotation.copy(points.rotation);
       trail.position.copy(points.position);
       trail.geometry.attributes.position.needsUpdate = true;
@@ -1056,40 +1105,50 @@ export class BeastStage extends EventTarget {
       0,
       1,
     );
-    const eased = progress * progress * (3 - 2 * progress);
-    const scatter = Math.sin(progress * Math.PI) * 0.34;
+    const globalEase = 1 - Math.pow(1 - progress, 3);
 
     for (let index = 0; index < positions.length / 3; index += 1) {
+      const seed = this.absorbAnimation.seeds[index];
+      const localProgress = THREE.MathUtils.clamp((progress - seed.delay) / (1 - seed.delay), 0, 1);
+      const eased = 1 - Math.pow(1 - localProgress, 3);
+      const bloom = Math.sin(localProgress * Math.PI);
       const originX = this.absorbAnimation.origins[index * 3];
       const originY = this.absorbAnimation.origins[index * 3 + 1];
       const originZ = this.absorbAnimation.origins[index * 3 + 2];
       const targetX = this.absorbAnimation.targets[index * 3];
       const targetY = this.absorbAnimation.targets[index * 3 + 1];
       const targetZ = this.absorbAnimation.targets[index * 3 + 2];
-      const angle = index * 12.9898;
+      const angle = seed.phase + globalEase * Math.PI * 1.25;
+      const swirlX = Math.cos(angle) * seed.swirl * bloom;
+      const swirlZ = Math.sin(angle) * seed.swirl * bloom;
 
-      const nextX = THREE.MathUtils.lerp(originX, targetX, eased) + Math.sin(angle) * scatter;
-      const nextY = THREE.MathUtils.lerp(originY, targetY, eased) + Math.cos(angle * 1.7) * scatter * 0.5;
-      const nextZ = THREE.MathUtils.lerp(originZ, targetZ, eased) + Math.sin(angle * 0.7) * scatter;
+      const nextX = THREE.MathUtils.lerp(originX, targetX, eased) + swirlX;
+      const nextY = THREE.MathUtils.lerp(originY, targetY, eased) + seed.lift * bloom;
+      const nextZ = THREE.MathUtils.lerp(originZ, targetZ, eased) + swirlZ;
 
       positions[index * 3] = nextX;
       positions[index * 3 + 1] = nextY;
       positions[index * 3 + 2] = nextZ;
 
       if (trailPositions) {
+        const tailProgress = Math.max(0, eased - 0.08);
+        const tailX = THREE.MathUtils.lerp(originX, targetX, tailProgress);
+        const tailY = THREE.MathUtils.lerp(originY, targetY, tailProgress);
+        const tailZ = THREE.MathUtils.lerp(originZ, targetZ, tailProgress);
         const lineOffset = index * 6;
+
         trailPositions[lineOffset] = nextX;
         trailPositions[lineOffset + 1] = nextY;
         trailPositions[lineOffset + 2] = nextZ;
-        trailPositions[lineOffset + 3] = THREE.MathUtils.lerp(originX, targetX, Math.max(0, eased - 0.08));
-        trailPositions[lineOffset + 4] = THREE.MathUtils.lerp(originY, targetY, Math.max(0, eased - 0.08));
-        trailPositions[lineOffset + 5] = THREE.MathUtils.lerp(originZ, targetZ, Math.max(0, eased - 0.08));
+        trailPositions[lineOffset + 3] = tailX;
+        trailPositions[lineOffset + 4] = tailY;
+        trailPositions[lineOffset + 5] = tailZ;
       }
     }
 
-    points.material.opacity = 0.78 * (1 - Math.max(0, progress - 0.65) / 0.35);
+    points.material.opacity = 0.78 * (1 - Math.max(0, progress - 0.72) / 0.28);
     if (trail) {
-      trail.material.opacity = 0.34 * (1 - Math.max(0, progress - 0.58) / 0.42);
+      trail.material.opacity = 0.28 * (1 - Math.max(0, progress - 0.48) / 0.52);
       trail.geometry.attributes.position.needsUpdate = true;
     }
     points.geometry.attributes.position.needsUpdate = true;
