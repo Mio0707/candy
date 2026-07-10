@@ -6,12 +6,16 @@ const stageElement = document.querySelector('#beast-stage');
 const loadingPanel = document.querySelector('#loading-panel');
 const titleElement = document.querySelector('#step-title');
 const descriptionElement = document.querySelector('#step-description');
+const sugarKnowledgeElement = document.querySelector('#sugar-knowledge');
 const progressList = document.querySelector('#progress-list');
 const partReport = document.querySelector('#part-report');
 const fortunePanel = document.querySelector('#fortune-panel');
 const fortuneOptions = document.querySelector('#fortune-options');
 const fortuneDescription = document.querySelector('#fortune-description');
 const nextButton = document.querySelector('#next-step');
+const cameraBackground = document.querySelector('#camera-background');
+const cameraStatus = document.querySelector('#camera-status');
+const stageView = document.querySelector('.stage-view');
 
 const stage = new BeastStage(stageElement, {
   modelUrl,
@@ -83,10 +87,44 @@ function renderNextButton(step) {
 function renderState(state) {
   titleElement.textContent = state.step.title;
   descriptionElement.textContent = state.step.description;
+  sugarKnowledgeElement.textContent = state.step.knowledge ?? '灵感来自国家级非遗天门糖塑。';
+  stageView.classList.toggle(
+    'blessing-mode',
+    ['fortune-select', 'lift-blessing', 'fortune-shell', 'blessing-complete'].includes(state.step.id),
+  );
   renderNextButton(state.step);
   renderFortunes(state);
   renderProgress(state);
   renderReport(state.report);
+}
+
+async function setupCameraBackground() {
+  if (!navigator.mediaDevices?.getUserMedia) {
+    cameraStatus.textContent = '当前浏览器不支持摄像头背景';
+    return;
+  }
+
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({
+      video: {
+        width: { ideal: 1280 },
+        height: { ideal: 720 },
+        facingMode: 'user',
+      },
+      audio: false,
+    });
+
+    cameraBackground.srcObject = stream;
+    cameraBackground.hidden = false;
+    cameraStatus.textContent = '手势感应背景已开启';
+    window.setTimeout(() => {
+      cameraStatus.hidden = true;
+    }, 1800);
+  } catch (error) {
+    cameraBackground.hidden = true;
+    cameraStatus.textContent = '摄像头未开启，仍可用按钮体验';
+    console.warn('Camera background unavailable:', error);
+  }
 }
 
 nextButton.addEventListener('click', () => stage.next());
@@ -95,6 +133,7 @@ document.querySelector('#reset-stage').addEventListener('click', () => stage.res
 document.querySelector('#show-all').addEventListener('click', () => stage.showAll());
 
 stage.addEventListener('stepchange', (event) => renderState(event.detail));
+setupCameraBackground();
 
 stage
   .load()

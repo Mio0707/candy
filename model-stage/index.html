@@ -9,17 +9,32 @@
   <body>
     <main class="stage-shell">
       <section class="stage-view" aria-label="模型舞台">
+        <video id="camera-background" class="camera-background" autoplay muted playsinline></video>
+        <div class="camera-overlay"></div>
         <div id="beast-stage"></div>
         <div class="stage-loading" id="loading-panel">模型加载中...</div>
+        <div class="camera-status" id="camera-status">等待摄像头授权</div>
       </section>
 
       <aside class="stage-panel">
-        <p class="eyebrow">模型舞台测试</p>
+        <p class="eyebrow">非遗天门糖塑交互体验</p>
         <h1>吹糖造物</h1>
-        <p id="step-title" class="step-title">准备中</p>
-        <p id="step-description" class="step-description">
-          正在读取瑞兽模型。
-        </p>
+        <section class="copy-section">
+          <p class="copy-label">步骤标题</p>
+          <p id="step-title" class="step-title">准备中</p>
+        </section>
+        <section class="copy-section">
+          <p class="copy-label">手势提醒</p>
+          <p id="step-description" class="step-description">
+            正在读取瑞兽模型。
+          </p>
+        </section>
+        <section class="knowledge-card">
+          <p class="copy-label">糖塑小识</p>
+          <p id="sugar-knowledge" class="sugar-knowledge">
+            灵感来自国家级非遗天门糖塑。
+          </p>
+        </section>
 
         <div class="controls">
           <button id="prev-step" type="button">上一步</button>

@@ -6,7 +6,7 @@ const MODEL_DISPLAY_ROTATION_Y = -Math.PI / 3;
 const BALL_PICKUP_OFFSET = [0, 0.68, -0.45];
 const POINT_CLOUD_COUNT = 3600;
 const BLESSING_POINT_CLOUD_COUNT = 10800;
-const POINT_CLOUD_GATHER_DURATION = 2.35;
+const POINT_CLOUD_GATHER_DURATION = 2;
 const POINT_CLOUD_STAGGER_DURATION = 0.62;
 const PARTICLE_TRAIL_LENGTH = 0.18;
 const BLESSING_ROTATION_SPEED = 0.208;
@@ -39,6 +39,7 @@ export const EXPERIENCE_STEPS = [
     id: 'base-small',
     title: '吹起底座 1/3',
     description: '握拳一次，让红色糖团开始鼓起。',
+    knowledge: '天门糖塑以麦芽糖为主要材料，视觉上常有温润油亮的糖料光泽。',
     visibleGroups: ['base'],
     baseScale: 0.45,
   },
@@ -46,6 +47,7 @@ export const EXPERIENCE_STEPS = [
     id: 'base-mid',
     title: '吹起底座 2/3',
     description: '再次握拳，糖团继续变得饱满。',
+    knowledge: '糖塑主体常有圆鼓饱满的体量，带有吹塑形成的轻盈感。',
     visibleGroups: ['base'],
     baseScale: 0.75,
   },
@@ -53,6 +55,7 @@ export const EXPERIENCE_STEPS = [
     id: 'base-final',
     title: '吹起底座 3/3',
     description: '第三次握拳，红色葫芦状底座定型。',
+    knowledge: '“吹”是本体验借用的糖塑造型语言，用来表现糖料鼓起成形。',
     visibleGroups: ['base'],
     baseScale: 1,
   },
@@ -60,6 +63,7 @@ export const EXPERIENCE_STEPS = [
     id: 'body-block',
     title: '取黑色身体糖块',
     description: '握拳一次，黑色身体糖块悬空出现。',
+    knowledge: '天门糖塑常用红、绿、黑和糖本色，形成鲜明热烈的民间色彩。',
     visibleGroups: ['base', 'body'],
     baseScale: 1,
     partTransforms: {
@@ -70,6 +74,7 @@ export const EXPERIENCE_STEPS = [
     id: 'body-place',
     title: '放置身体',
     description: '捏住黑色糖块向底座移动，身体吸附到底座上。',
+    knowledge: '糖塑不只是雕刻，也会通过糖块、糖片的组合形成完整造型。',
     visibleGroups: ['base', 'body'],
     baseScale: 1,
   },
@@ -77,6 +82,7 @@ export const EXPERIENCE_STEPS = [
     id: 'front-legs',
     title: '拉出前脚',
     description: '捏住向下拉，前脚像从身体里被慢慢拉出来。',
+    knowledge: '拉伸、压痕和轻微不规则，是糖塑手作感的重要来源。',
     visibleGroups: ['base', 'body', 'frontLegs'],
     baseScale: 1,
     enterFrom: {
@@ -92,6 +98,7 @@ export const EXPERIENCE_STEPS = [
     id: 'back-legs',
     title: '拉出后脚',
     description: '再次向下拉，后脚从身体里延展出来并落位。',
+    knowledge: '糖塑艺人常用有限糖料，快速做出夸张又生动的体量。',
     visibleGroups: ['base', 'body', 'frontLegs', 'backLegs'],
     baseScale: 1,
     enterFrom: {
@@ -107,6 +114,7 @@ export const EXPERIENCE_STEPS = [
     id: 'back-mustache',
     title: '贴上背部糖衣',
     description: '黄色背部糖衣贴到身体上，形成更强的糖塑装饰感。',
+    knowledge: '糖塑装饰常像独立糖片一样贴上去，而不是平面画上去。',
     visibleGroups: ['base', 'body', 'frontLegs', 'backLegs', 'backMustache'],
     baseScale: 1,
     enterFrom: {
@@ -117,6 +125,7 @@ export const EXPERIENCE_STEPS = [
     id: 'head-block',
     title: '取红色头部糖块',
     description: '握拳一次，红色头部糖块悬空出现。',
+    knowledge: '天门糖塑造型常饱满夸张，不追求写实，而强调鲜明特征。',
     visibleGroups: ['base', 'body', 'frontLegs', 'backLegs', 'backMustache', 'head'],
     baseScale: 1,
     partTransforms: {
@@ -127,6 +136,7 @@ export const EXPERIENCE_STEPS = [
     id: 'head-place',
     title: '安放头部',
     description: '捏住头部糖块向身体前方移动，头部落位。',
+    knowledge: '接缝和拼接关系可以被保留下来，让作品更像真实手作糖塑。',
     visibleGroups: ['base', 'body', 'frontLegs', 'backLegs', 'backMustache', 'head'],
     baseScale: 1,
   },
@@ -134,6 +144,7 @@ export const EXPERIENCE_STEPS = [
     id: 'tail',
     title: '贴上尾巴',
     description: '先把尾巴糖片贴到身体后方。',
+    knowledge: '尾巴、耳朵和背部装饰，都可以理解为糖片或糖条的组合。',
     visibleGroups: ['base', 'body', 'frontLegs', 'backLegs', 'head', 'tail', 'backMustache'],
     baseScale: 1,
     enterFrom: {
@@ -144,6 +155,7 @@ export const EXPERIENCE_STEPS = [
     id: 'turn-front',
     title: '转到展示角度',
     description: '做一个旋转手势，让瑞兽转到斜正面的展示角度，准备贴耳朵和头部糖条。',
+    knowledge: '糖塑作品常强调动势，造型要有精神，不像静止的工业摆件。',
     frontView: true,
     visibleGroups: ['base', 'body', 'frontLegs', 'backLegs', 'head', 'tail', 'backMustache'],
     baseScale: 1,
@@ -152,6 +164,7 @@ export const EXPERIENCE_STEPS = [
     id: 'ears',
     title: '贴上两个耳朵',
     description: '再把两个耳朵糖片贴到头部两侧。',
+    knowledge: '轻微不对称不是缺陷，它会让糖塑更有民间手作的生命力。',
     frontView: true,
     visibleGroups: ['base', 'body', 'frontLegs', 'backLegs', 'head', 'tail', 'ears', 'backMustache'],
     baseScale: 1,
@@ -163,6 +176,7 @@ export const EXPERIENCE_STEPS = [
     id: 'head-lines',
     title: '贴上头部和嘴部糖条',
     description: '红绿糖条贴到头部和嘴部，形成凸起纹样。',
+    knowledge: '糖塑纹样常像被搓、压、贴出来的凸起糖条，而不是印刷图案。',
     frontView: true,
     visibleGroups: [
       'base',
@@ -181,6 +195,7 @@ export const EXPERIENCE_STEPS = [
     id: 'ball-form',
     title: '捏出爪下圆球',
     description: '双手靠近时，圆球糖料先像头部糖块一样在空中出现。',
+    knowledge: '传统糖塑常通过简单形体组合，做出更丰富的故事感和吉祥意味。',
     frontView: true,
     visibleGroups: [
       'base',
@@ -206,6 +221,7 @@ export const EXPERIENCE_STEPS = [
     id: 'ball-place',
     title: '安放爪下圆球',
     description: '捏合向下时，圆球落到爪子下方，瑞兽主体完成。',
+    knowledge: '瑞兽、圆球等元素在本体验中用于表达守护、圆满和祝愿。',
     frontView: true,
     visibleGroups: [
       'base',
@@ -228,6 +244,7 @@ export const EXPERIENCE_STEPS = [
     id: 'complete',
     title: '旋转展示',
     description: '伸出一根手指朝上绕一圈，整件作品平行旋转一圈，展示完整瑞兽。',
+    knowledge: '本作品是基于天门糖塑艺术语言的数字创意设计，不是传统样式复刻。',
     frontView: true,
     showcaseSpin: true,
     visibleGroups: [
@@ -248,6 +265,7 @@ export const EXPERIENCE_STEPS = [
     id: 'fortune-select',
     title: '选择祝福',
     description: '从“顺、喜、勇、旺”里选择一种祝福，准备送给糖塑瑞兽。',
+    knowledge: '糖塑常承载喜庆、吉祥、守护等民俗寓意。',
     frontView: true,
     visibleGroups: [
       'base',
@@ -267,6 +285,7 @@ export const EXPERIENCE_STEPS = [
     id: 'lift-blessing',
     title: '托起瑞兽',
     description: '手掌停在瑞兽下方，托起整件作品，让选中的祝福开始流动。',
+    knowledge: '这里的祝福粒子是数字化表达，用来延展糖塑作品中的吉祥意味。',
     frontView: true,
     visibleGroups: [
       'base',
@@ -286,6 +305,7 @@ export const EXPERIENCE_STEPS = [
     id: 'fortune-shell',
     title: '祝福显形',
     description: '瑞兽短暂化成由祝福粒子组成的轮廓。捏拳收拢，把这份祝福带走。',
+    knowledge: '粒子效果不是传统糖塑技法，而是本体验加入的互动视觉表达。',
     frontView: true,
     ethereal: true,
     blessingSpin: true,
@@ -307,6 +327,7 @@ export const EXPERIENCE_STEPS = [
     id: 'blessing-complete',
     title: '祝福完成',
     description: '你的糖塑瑞兽已收到祝福。它带着这份心意，完成了今天的吹糖造物。',
+    knowledge: '真实糖塑制作涉及高温糖料，本体验只做文化感受和数字互动表达。',
     frontView: true,
     visibleGroups: [
       'base',
@@ -357,12 +378,12 @@ export class BeastStage extends EventTarget {
     this.particleTexture = this.createParticleTexture();
 
     this.scene = new THREE.Scene();
-    this.scene.background = new THREE.Color(DEFAULT_STAGE_BACKGROUND);
+    this.scene.background = null;
 
     this.camera = new THREE.PerspectiveCamera(38, 1, 0.01, 100);
     this.camera.position.set(0, 1.1, 3.2);
 
-    this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+    this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     this.renderer.outputColorSpace = THREE.SRGBColorSpace;
     this.renderer.shadowMap.enabled = true;
@@ -471,9 +492,7 @@ export class BeastStage extends EventTarget {
     this.absorbAnimation = null;
     this.clearBlessingParticles();
     this.modelRoot.position.y = 0;
-    this.scene.background = new THREE.Color(
-      this.stepIndex >= blessingStartIndex ? BLESSING_STAGE_BACKGROUND : DEFAULT_STAGE_BACKGROUND,
-    );
+    this.scene.background = null;
 
     for (const groupName of step.visibleGroups) {
       for (const partName of this.partGroups[groupName] ?? []) {
@@ -660,23 +679,18 @@ export class BeastStage extends EventTarget {
     return { ...DEFAULT_PARTICLE_PROFILE };
   }
 
-  getBlessingParticleOrigin({ center, radius, theta, targetX, targetZ }) {
-    const sourceSpread = radius * (0.36 + Math.random() * 0.28);
+  getBlessingParticleOrigin({ center, radius, targetX, targetY, targetZ, phase }) {
+    const dx = targetX - center.x;
+    const dy = targetY - center.y;
+    const dz = targetZ - center.z;
+    const length = Math.hypot(dx, dy, dz) || 1;
+    const floatOut = radius * (0.06 + Math.random() * 0.22);
+    const side = radius * (Math.random() - 0.5) * 0.18;
 
     return {
-      x: THREE.MathUtils.lerp(center.x + Math.cos(theta) * sourceSpread, targetX, 0.16),
-      y: center.y - radius * (1.18 + Math.random() * 0.36),
-      z: THREE.MathUtils.lerp(center.z + Math.sin(theta) * sourceSpread, targetZ, 0.16),
-    };
-  }
-
-  getBlessingParticleApex({ center, radius, theta, origin, targetX, targetY, targetZ }) {
-    const arcSpread = radius * (0.18 + Math.random() * 0.2);
-
-    return {
-      x: THREE.MathUtils.lerp(origin.x, targetX, 0.45) + Math.cos(theta * 1.31) * arcSpread,
-      y: Math.max(targetY, center.y) + radius * (1.05 + Math.random() * 0.48),
-      z: THREE.MathUtils.lerp(origin.z, targetZ, 0.45) + Math.sin(theta * 1.17) * arcSpread,
+      x: targetX + (dx / length) * floatOut + Math.cos(phase) * side,
+      y: targetY + (dy / length) * floatOut + Math.sin(phase * 1.27) * side,
+      z: targetZ + (dz / length) * floatOut + Math.sin(phase) * side,
     };
   }
 
@@ -688,14 +702,13 @@ export class BeastStage extends EventTarget {
     const particleSize = options.particleSize ?? profile.size;
     const particleOpacity = options.opacity ?? profile.opacity;
     const particleBlending = options.blending ?? THREE.AdditiveBlending;
-    const hasTrails = options.trails ?? true;
+    const hasTrails = options.trails ?? false;
     const sample = this.sampleModelSurfacePoints(options.count ?? POINT_CLOUD_COUNT);
     const { targets, center, radius } = sample;
     const count = targets.length / 3;
     const positions = new Float32Array(count * 3);
     const colors = new Float32Array(count * 3);
     const origins = new Float32Array(count * 3);
-    const apexes = new Float32Array(count * 3);
     const seeds = [];
     const particleColor = new THREE.Color(fortune.color);
 
@@ -703,48 +716,66 @@ export class BeastStage extends EventTarget {
       const x = targets[index * 3];
       const y = targets[index * 3 + 1];
       const z = targets[index * 3 + 2];
-      const theta = index * 2.399963 + Math.random() * 0.42;
+      const phase = Math.random() * TWO_PI;
+      const normalX = x - center.x;
+      const normalY = y - center.y;
+      const normalZ = z - center.z;
+      const normalLength = Math.hypot(normalX, normalY, normalZ) || 1;
+      const nx = normalX / normalLength;
+      const ny = normalY / normalLength;
+      const nz = normalZ / normalLength;
+      const tx = -nz;
+      const tz = nx;
+      const tangentLength = Math.hypot(tx, tz) || 1;
+      const tangentX = tx / tangentLength;
+      const tangentY = 0;
+      const tangentZ = tz / tangentLength;
+      const crossX = ny * tangentZ - nz * tangentY;
+      const crossY = nz * tangentX - nx * tangentZ;
+      const crossZ = nx * tangentY - ny * tangentX;
+      const brightness = 0.68 + Math.random() * 0.5;
       const origin = this.getBlessingParticleOrigin({
         center,
         radius,
-        theta,
-        targetX: x,
-        targetZ: z,
-      });
-      const apex = this.getBlessingParticleApex({
-        center,
-        radius,
-        theta,
-        origin,
         targetX: x,
         targetY: y,
         targetZ: z,
+        phase,
       });
 
       origins[index * 3] = origin.x;
       origins[index * 3 + 1] = origin.y;
       origins[index * 3 + 2] = origin.z;
-      apexes[index * 3] = apex.x;
-      apexes[index * 3 + 1] = apex.y;
-      apexes[index * 3 + 2] = apex.z;
       positions[index * 3] = origin.x;
       positions[index * 3 + 1] = origin.y;
       positions[index * 3 + 2] = origin.z;
-      colors[index * 3] = particleColor.r;
-      colors[index * 3 + 1] = particleColor.g;
-      colors[index * 3 + 2] = particleColor.b;
+      colors[index * 3] = particleColor.r * brightness;
+      colors[index * 3 + 1] = particleColor.g * brightness;
+      colors[index * 3 + 2] = particleColor.b * brightness;
       seeds.push({
-        phase: Math.random() * TWO_PI,
-        speed: 0.62 + Math.random() * 0.58,
-        drift: 0.018 + Math.random() * 0.028,
-        delay: Math.random() * POINT_CLOUD_STAGGER_DURATION,
+        phase,
+        speed: 0.72 + Math.random() * 1.25,
+        drift: radius * (0.012 + Math.random() * 0.034),
+        delay: Math.random() * 0.08,
         trailScale: 0.85 + Math.random() * 0.72,
+        normalX: nx,
+        normalY: ny,
+        normalZ: nz,
+        tangentX,
+        tangentY,
+        tangentZ,
+        crossX,
+        crossY,
+        crossZ,
+        floatOut: radius * (0.018 + Math.random() * 0.075),
+        cloudOut: radius * (0.04 + Math.random() * 0.18),
       });
     }
 
     const geometry = new THREE.BufferGeometry();
     geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
     geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+    geometry.setDrawRange(0, count);
 
     const material = new THREE.PointsMaterial({
       size: particleSize,
@@ -770,7 +801,6 @@ export class BeastStage extends EventTarget {
       fortune,
       profile,
       origins,
-      apexes,
       targets,
       center,
       radius,
@@ -805,6 +835,7 @@ export class BeastStage extends EventTarget {
     const geometry = new THREE.BufferGeometry();
     geometry.setAttribute('position', new THREE.BufferAttribute(trailPositions, 3));
     geometry.setAttribute('color', new THREE.BufferAttribute(trailColors, 3));
+    geometry.setDrawRange(0, count * 2);
 
     const material = new THREE.LineBasicMaterial({
       transparent: true,
@@ -876,9 +907,14 @@ export class BeastStage extends EventTarget {
 
     const positions = this.blessingParticles.points.geometry.attributes.position.array;
     const origins = new Float32Array(positions);
+    const orbs = new Float32Array(positions.length);
     const targets = new Float32Array(positions.length);
     const seeds = [];
     const { center, radius } = this.blessingParticles;
+    this.blessingParticles.points.geometry.setDrawRange(0, positions.length / 3);
+    if (this.blessingParticles.trail) {
+      this.blessingParticles.trail.geometry.setDrawRange(0, (positions.length / 3) * 2);
+    }
 
     for (let index = 0; index < positions.length / 3; index += 1) {
       const originX = origins[index * 3];
@@ -886,6 +922,9 @@ export class BeastStage extends EventTarget {
       const originZ = origins[index * 3 + 2];
       const angle = index * 2.399963 + Math.random() * 0.55;
       const vertical = 0.18 + Math.random() * 0.58;
+      const orbRadius = radius * (0.025 + Math.random() * 0.065);
+      const orbVertical = (Math.random() - 0.5) * radius * 0.055;
+      const orbCenterY = center.y + radius * 0.08;
       const direction = new THREE.Vector3(
         (originX - center.x) * 0.55 + Math.cos(angle) * radius * 0.62,
         (originY - center.y) * 0.22 + vertical * radius,
@@ -893,6 +932,9 @@ export class BeastStage extends EventTarget {
       ).normalize();
       const distance = radius * (0.62 + Math.random() * 0.62);
 
+      orbs[index * 3] = center.x + Math.cos(angle) * orbRadius;
+      orbs[index * 3 + 1] = orbCenterY + orbVertical;
+      orbs[index * 3 + 2] = center.z + Math.sin(angle) * orbRadius;
       targets[index * 3] = originX + direction.x * distance;
       targets[index * 3 + 1] = originY + direction.y * distance;
       targets[index * 3 + 2] = originZ + direction.z * distance;
@@ -906,8 +948,9 @@ export class BeastStage extends EventTarget {
 
     this.absorbAnimation = {
       start: this.clock.getElapsedTime(),
-      duration: 1.95,
+      duration: 2.4,
       origins,
+      orbs,
       targets,
       seeds,
     };
@@ -1004,10 +1047,12 @@ export class BeastStage extends EventTarget {
   updateBlessingParticles(elapsed) {
     if (!this.blessingParticles || this.absorbAnimation || this.blessingParticles.mode === 'dissolve') return;
 
-    const { points, trail, seeds, origins, apexes, targets, start, radius, profile } = this.blessingParticles;
+    const { points, trail, seeds, origins, targets, start, profile } = this.blessingParticles;
     const positions = points.geometry.attributes.position.array;
     const trailPositions = trail?.geometry.attributes.position.array;
     const time = elapsed - start;
+    points.geometry.setDrawRange(0, seeds.length);
+    if (trail) trail.geometry.setDrawRange(0, seeds.length * 2);
 
     for (let index = 0; index < seeds.length; index += 1) {
       const seed = seeds[index];
@@ -1016,18 +1061,14 @@ export class BeastStage extends EventTarget {
         0,
         1,
       );
-      const eased = progress < 0.5
-        ? 2 * progress * progress
-        : 1 - Math.pow(-2 * progress + 2, 2) / 2;
-      const settle = Math.min(1, Math.max(0, (progress - 0.78) / 0.22));
-      const wave = Math.sin(time * seed.speed + seed.phase) * seed.drift * (1 - settle * 0.72);
-      const sideDrift = Math.cos(time * seed.speed * 0.78 + seed.phase) * seed.drift * 0.64 * (1 - settle);
+      const settle = progress * progress * (3 - 2 * progress);
+      const looseness = 1 - settle;
+      const pulse = Math.sin(time * seed.speed + seed.phase);
+      const sidePulse = Math.cos(time * seed.speed * 0.73 + seed.phase * 1.41);
+      const cloudPulse = Math.sin(time * 0.64 + seed.phase * 0.47);
       const originX = origins[index * 3];
       const originY = origins[index * 3 + 1];
       const originZ = origins[index * 3 + 2];
-      const apexX = apexes[index * 3];
-      const apexY = apexes[index * 3 + 1];
-      const apexZ = apexes[index * 3 + 2];
       const targetX = targets[index * 3];
       const targetY = targets[index * 3 + 1];
       const targetZ = targets[index * 3 + 2];
@@ -1035,21 +1076,25 @@ export class BeastStage extends EventTarget {
       const previousX = positions[index * 3];
       const previousY = positions[index * 3 + 1];
       const previousZ = positions[index * 3 + 2];
-      const inv = 1 - eased;
-      let nextX = inv * inv * originX + 2 * inv * eased * apexX + eased * eased * targetX;
-      let nextY = inv * inv * originY + 2 * inv * eased * apexY + eased * eased * targetY;
-      let nextZ = inv * inv * originZ + 2 * inv * eased * apexZ + eased * eased * targetZ;
-
-      nextX += wave;
-      nextY += Math.sin(time * seed.speed * 1.2 + seed.phase) * seed.drift * 0.42 * (1 - settle);
-      nextZ += sideDrift;
-
-      if (progress >= 1) {
-        const surfaceShimmer = Math.sin(time * 2.4 + seed.phase) * seed.drift * 0.22;
-        nextX = targetX + surfaceShimmer;
-        nextY = targetY + Math.cos(time * 1.7 + seed.phase) * seed.drift * 0.18;
-        nextZ = targetZ - surfaceShimmer;
-      }
+      const baseX = THREE.MathUtils.lerp(originX, targetX, settle);
+      const baseY = THREE.MathUtils.lerp(originY, targetY, settle);
+      const baseZ = THREE.MathUtils.lerp(originZ, targetZ, settle);
+      const surfaceShimmer = seed.floatOut * 0.06 * Math.sin(time * 1.8 + seed.phase);
+      const outward = (seed.floatOut * pulse + seed.cloudOut * cloudPulse) * looseness + surfaceShimmer * settle;
+      const side = seed.drift * sidePulse * looseness;
+      const cross = seed.drift * Math.sin(time * seed.speed * 1.17 + seed.phase * 0.83) * looseness;
+      const nextX = baseX
+        + seed.normalX * outward
+        + seed.tangentX * side
+        + seed.crossX * cross;
+      const nextY = baseY
+        + seed.normalY * outward
+        + seed.tangentY * side
+        + seed.crossY * cross;
+      const nextZ = baseZ
+        + seed.normalZ * outward
+        + seed.tangentZ * side
+        + seed.crossZ * cross;
 
       positions[index * 3] = nextX;
       positions[index * 3 + 1] = nextY;
@@ -1105,36 +1150,45 @@ export class BeastStage extends EventTarget {
       0,
       1,
     );
-    const globalEase = 1 - Math.pow(1 - progress, 3);
+    const collapseProgress = THREE.MathUtils.clamp(progress / 0.42, 0, 1);
+    const burstProgress = THREE.MathUtils.clamp((progress - 0.38) / 0.62, 0, 1);
+    const collapseEase = collapseProgress * collapseProgress * (3 - 2 * collapseProgress);
+    const burstEase = 1 - Math.pow(1 - burstProgress, 3);
 
     for (let index = 0; index < positions.length / 3; index += 1) {
       const seed = this.absorbAnimation.seeds[index];
-      const localProgress = THREE.MathUtils.clamp((progress - seed.delay) / (1 - seed.delay), 0, 1);
-      const eased = 1 - Math.pow(1 - localProgress, 3);
-      const bloom = Math.sin(localProgress * Math.PI);
+      const localBurst = THREE.MathUtils.clamp((burstProgress - seed.delay) / (1 - seed.delay), 0, 1);
+      const localBurstEase = 1 - Math.pow(1 - localBurst, 3);
+      const bloom = Math.sin(localBurst * Math.PI);
       const originX = this.absorbAnimation.origins[index * 3];
       const originY = this.absorbAnimation.origins[index * 3 + 1];
       const originZ = this.absorbAnimation.origins[index * 3 + 2];
+      const orbX = this.absorbAnimation.orbs[index * 3];
+      const orbY = this.absorbAnimation.orbs[index * 3 + 1];
+      const orbZ = this.absorbAnimation.orbs[index * 3 + 2];
       const targetX = this.absorbAnimation.targets[index * 3];
       const targetY = this.absorbAnimation.targets[index * 3 + 1];
       const targetZ = this.absorbAnimation.targets[index * 3 + 2];
-      const angle = seed.phase + globalEase * Math.PI * 1.25;
+      const angle = seed.phase + burstEase * Math.PI * 1.25;
       const swirlX = Math.cos(angle) * seed.swirl * bloom;
       const swirlZ = Math.sin(angle) * seed.swirl * bloom;
 
-      const nextX = THREE.MathUtils.lerp(originX, targetX, eased) + swirlX;
-      const nextY = THREE.MathUtils.lerp(originY, targetY, eased) + seed.lift * bloom;
-      const nextZ = THREE.MathUtils.lerp(originZ, targetZ, eased) + swirlZ;
+      const collapseX = THREE.MathUtils.lerp(originX, orbX, collapseEase);
+      const collapseY = THREE.MathUtils.lerp(originY, orbY, collapseEase);
+      const collapseZ = THREE.MathUtils.lerp(originZ, orbZ, collapseEase);
+      const nextX = THREE.MathUtils.lerp(collapseX, targetX, localBurstEase) + swirlX;
+      const nextY = THREE.MathUtils.lerp(collapseY, targetY, localBurstEase) + seed.lift * bloom;
+      const nextZ = THREE.MathUtils.lerp(collapseZ, targetZ, localBurstEase) + swirlZ;
 
       positions[index * 3] = nextX;
       positions[index * 3 + 1] = nextY;
       positions[index * 3 + 2] = nextZ;
 
       if (trailPositions) {
-        const tailProgress = Math.max(0, eased - 0.08);
-        const tailX = THREE.MathUtils.lerp(originX, targetX, tailProgress);
-        const tailY = THREE.MathUtils.lerp(originY, targetY, tailProgress);
-        const tailZ = THREE.MathUtils.lerp(originZ, targetZ, tailProgress);
+        const tailProgress = Math.max(0, localBurstEase - 0.08);
+        const tailX = THREE.MathUtils.lerp(collapseX, targetX, tailProgress);
+        const tailY = THREE.MathUtils.lerp(collapseY, targetY, tailProgress);
+        const tailZ = THREE.MathUtils.lerp(collapseZ, targetZ, tailProgress);
         const lineOffset = index * 6;
 
         trailPositions[lineOffset] = nextX;
@@ -1146,7 +1200,7 @@ export class BeastStage extends EventTarget {
       }
     }
 
-    points.material.opacity = 0.78 * (1 - Math.max(0, progress - 0.72) / 0.28);
+    points.material.opacity = 0.82 * (1 - Math.max(0, progress - 0.78) / 0.22);
     if (trail) {
       trail.material.opacity = 0.28 * (1 - Math.max(0, progress - 0.48) / 0.52);
       trail.geometry.attributes.position.needsUpdate = true;

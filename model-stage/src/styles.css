@@ -34,11 +34,52 @@ button {
 .stage-view {
   position: relative;
   min-width: 0;
+  overflow: hidden;
   background:
     radial-gradient(circle at 50% 45%, rgba(255, 244, 225, 0.96), rgba(228, 198, 169, 0.6) 48%, #d3a77e 100%);
 }
 
+.camera-background {
+  position: absolute;
+  inset: -28px;
+  z-index: 0;
+  width: calc(100% + 56px);
+  height: calc(100% + 56px);
+  object-fit: cover;
+  filter: blur(18px) brightness(0.56) saturate(0.72);
+  opacity: 0.42;
+  transform: scaleX(-1);
+}
+
+.camera-background[hidden] {
+  display: none;
+}
+
+.camera-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background:
+    radial-gradient(circle at 50% 44%, rgba(255, 241, 212, 0.7), rgba(87, 42, 23, 0.28) 54%, rgba(29, 13, 8, 0.56) 100%),
+    linear-gradient(115deg, rgba(246, 226, 196, 0.42), rgba(114, 45, 31, 0.18));
+  pointer-events: none;
+  transition: background 0.4s ease;
+}
+
+.stage-view.blessing-mode .camera-background {
+  filter: blur(20px) brightness(0.36) saturate(0.56);
+  opacity: 0.46;
+}
+
+.stage-view.blessing-mode .camera-overlay {
+  background:
+    radial-gradient(circle at 50% 44%, rgba(44, 24, 18, 0.2), rgba(7, 5, 4, 0.66) 52%, rgba(3, 2, 2, 0.92) 100%),
+    linear-gradient(115deg, rgba(90, 36, 26, 0.24), rgba(0, 0, 0, 0.3));
+}
+
 #beast-stage {
+  position: relative;
+  z-index: 2;
   width: 100%;
   height: 100%;
 }
@@ -51,6 +92,7 @@ button {
 
 .stage-loading {
   position: absolute;
+  z-index: 4;
   left: 24px;
   top: 24px;
   padding: 10px 14px;
@@ -59,10 +101,28 @@ button {
   color: #fff8ed;
 }
 
+.camera-status {
+  position: absolute;
+  z-index: 4;
+  left: 24px;
+  bottom: 24px;
+  max-width: 260px;
+  padding: 8px 12px;
+  border-radius: 999px;
+  color: rgba(255, 248, 237, 0.92);
+  background: rgba(34, 18, 13, 0.58);
+  font-size: 12px;
+  backdrop-filter: blur(8px);
+}
+
+.camera-status[hidden] {
+  display: none;
+}
+
 .stage-panel {
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 16px;
   min-width: 0;
   height: 100vh;
   padding: 28px 24px;
@@ -85,6 +145,20 @@ h1 {
   line-height: 1.15;
 }
 
+.copy-section,
+.knowledge-card {
+  display: grid;
+  gap: 8px;
+}
+
+.copy-label {
+  margin: 0;
+  color: #a44935;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+
 .step-title {
   margin: 0;
   font-size: 22px;
@@ -93,9 +167,24 @@ h1 {
 
 .step-description {
   min-height: 54px;
-  margin: -10px 0 0;
+  margin: 0;
   color: #6b4a39;
   line-height: 1.7;
+}
+
+.knowledge-card {
+  padding: 14px;
+  border: 1px solid rgba(185, 52, 39, 0.18);
+  border-radius: 12px;
+  background: linear-gradient(135deg, rgba(255, 247, 232, 0.96), rgba(255, 236, 205, 0.72));
+  box-shadow: 0 10px 26px rgba(110, 50, 26, 0.08);
+}
+
+.sugar-knowledge {
+  min-height: 48px;
+  margin: 0;
+  color: #6b3d2b;
+  line-height: 1.65;
 }
 
 .controls {
