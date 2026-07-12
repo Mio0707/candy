@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>手势采样</title>
+    <script type="module" src="./src/gesture-sampler.js"></script>
+  </head>
+  <body class="sampler-page">
+    <main class="sampler-shell">
+      <section class="sampler-camera" aria-label="手势采样摄像头">
+        <video id="sampler-video" autoplay muted playsinline></video>
+        <canvas id="sampler-overlay" aria-hidden="true"></canvas>
+      </section>
+
+      <aside class="sampler-panel">
+        <header>
+          <p class="eyebrow">MediaPipe Hands</p>
+          <h1>手势采样</h1>
+        </header>
+
+        <label class="field">
+          <span>要采样的手势</span>
+          <select id="sample-target">
+            <option value="fist">握拳</option>
+            <option value="open">张掌</option>
+            <option value="pinch">捏合</option>
+            <option value="down">向下移动</option>
+            <option value="swipe">横向轻扫</option>
+            <option value="hold">停留</option>
+            <option value="lift">托起</option>
+            <option value="open-down">张掌下贴</option>
+            <option value="pinch-down">捏合下拉</option>
+            <option value="pinch-place">捏合安放/贴合</option>
+            <option value="one-finger-swipe">单指横扫</option>
+            <option value="two-hands-close">双手靠近</option>
+            <option value="two-hands-apart">双手远离</option>
+            <option value="circle">单指绕圈</option>
+          </select>
+        </label>
+
+        <label class="field">
+          <span>现象备注</span>
+          <textarea id="sample-note" rows="3" placeholder="比如：容易误判成张掌 / 不触发 / 会连跳"></textarea>
+        </label>
+
+        <div class="sampler-controls">
+          <button id="start-sampling" type="button" class="primary">开始采样</button>
+          <button id="stop-sampling" type="button">停止</button>
+          <button id="clear-sampling" type="button">清空</button>
+          <button id="send-sampling" type="button">发送给 Codex</button>
+        </div>
+
+        <section class="sampler-card">
+          <p class="copy-label">实时识别</p>
+          <pre id="live-output">等待摄像头...</pre>
+        </section>
+
+        <section class="sampler-card">
+          <p class="copy-label">采样统计</p>
+          <pre id="summary-output">还没有采样。</pre>
+        </section>
+
+        <p id="send-status" class="send-status"></p>
+      </aside>
+    </main>
+  </body>
+</html>

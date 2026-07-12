@@ -4,21 +4,62 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 
 const MODEL_DISPLAY_ROTATION_Y = -Math.PI / 3;
 const BALL_PICKUP_OFFSET = [0, 0.68, -0.45];
+const HEAD_PICKUP_OFFSET = [0.18, 0.48, 0];
+const TAIL_PICKUP_OFFSET = [0, 0.26, -0.25];
+const EARS_PICKUP_OFFSET = [0, 0.3, 0.16];
+const HEAD_LINES_PICKUP_OFFSET = [0.68, 0.3, -0.22];
+const ANIMATION_TIME_SCALE = 1.5;
 const POINT_CLOUD_COUNT = 3600;
 const BLESSING_POINT_CLOUD_COUNT = 10800;
-const POINT_CLOUD_GATHER_DURATION = 2;
-const POINT_CLOUD_STAGGER_DURATION = 0.62;
+const POINT_CLOUD_GATHER_DURATION = 1.6 * ANIMATION_TIME_SCALE;
+const POINT_CLOUD_STAGGER_DURATION = 0.5 * ANIMATION_TIME_SCALE;
 const PARTICLE_TRAIL_LENGTH = 0.18;
-const BLESSING_ROTATION_SPEED = 0.208;
+const BLESSING_ROTATION_SPEED = 0.208 * 2;
+const BLESSING_ABSORB_SPEED_MULTIPLIER = 2;
+const GESTURE_PREVIEW_LERP = 0.13;
+const GESTURE_SETTLE_DURATION = 0.45 * ANIMATION_TIME_SCALE;
+const BLESSING_FOLLOW_LERP = 0.2;
+const BLESSING_FOLLOW_LOST_GRACE = 0.4;
+const BLESSING_FOLLOW_MAX_X = 0.72;
+const BLESSING_FOLLOW_MAX_Y = 0.48;
 const TWO_PI = Math.PI * 2;
 const DEFAULT_STAGE_BACKGROUND = 0xf6efe6;
 const BLESSING_STAGE_BACKGROUND = 0x050403;
+const MODEL_NORMALIZED_SIZE = 1.155;
 
 export const FORTUNES = [
-  { id: 'shun', label: '顺', name: '顺遂', color: 0x38a848, description: '绿色光流从底部升起，再落下汇成瑞兽轮廓。' },
-  { id: 'xi', label: '喜', name: '喜乐', color: 0xf1bc36, description: '金黄色光流从底部升起，再落下汇成瑞兽轮廓。' },
-  { id: 'yong', label: '勇', name: '镇护', color: 0xffffff, description: '纯白光流从底部升起，再落下汇成瑞兽轮廓。' },
-  { id: 'wang', label: '旺', name: '兴旺', color: 0xd73327, description: '红色光流从底部升起，再落下汇成瑞兽轮廓。' },
+  {
+    id: 'shun',
+    label: '顺',
+    name: '顺遂',
+    color: 0x38a848,
+    description: '绿色光流从底部升起，再落下汇成瑞兽轮廓。',
+    blessing: '愿你一路顺遂，所行皆有回响。',
+  },
+  {
+    id: 'xi',
+    label: '喜',
+    name: '喜乐',
+    color: 0xf1bc36,
+    description: '金黄色光流从底部升起，再落下汇成瑞兽轮廓。',
+    blessing: '愿你常有喜乐，心中自带暖光。',
+  },
+  {
+    id: 'yong',
+    label: '勇',
+    name: '镇护',
+    color: 0xffffff,
+    description: '纯白光流从底部升起，再落下汇成瑞兽轮廓。',
+    blessing: '愿你勇气常在，被温柔稳稳守护。',
+  },
+  {
+    id: 'wang',
+    label: '旺',
+    name: '兴旺',
+    color: 0xd73327,
+    description: '红色光流从底部升起，再落下汇成瑞兽轮廓。',
+    blessing: '愿你元气兴旺，日日都有新生机。',
+  },
 ];
 
 const DEFAULT_FORTUNE_ID = 'shun';
@@ -34,7 +75,7 @@ const PART_PARTICLE_WEIGHTS = {
   head_lines: 0.3,
 };
 
-export const EXPERIENCE_STEPS = [
+const RAW_EXPERIENCE_STEPS = [
   {
     id: 'base-small',
     title: '吹起底座 1/3',
@@ -345,6 +386,156 @@ export const EXPERIENCE_STEPS = [
   },
 ];
 
+const ACTIVE_STEP_IDS = [
+  'base-small',
+  'body-block',
+  'front-legs',
+  'back-mustache',
+  'head-block',
+  'head-place',
+  'tail',
+  'ears',
+  'head-lines',
+  'ball-form',
+  'ball-place',
+  'complete',
+  'lift-blessing',
+  'fortune-shell',
+  'blessing-complete',
+];
+
+const ACTIVE_STEP_OVERRIDES = {
+  'base-small': {
+    title: '吹起底座',
+    description: '先张开手掌准备，再握拳一次，让红色糖团鼓起并定型成底座。',
+    knowledge: '天门糖塑用吹制扩充中空体量，称为“泡活”：既节省糖料，又能形成圆鼓饱满的外形。',
+    baseScale: 1,
+  },
+  'body-block': {
+    title: '出现并放置身体',
+    description: '先松开拳头，再次握拳，黑色身体糖块出现并落到底座上。',
+    knowledge: '天门糖塑讲究“吹塑结合”：先吹出中空大体量，再用捏、拉、压、贴完成细节，省糖却显得饱满。',
+    partTransforms: null,
+  },
+  'front-legs': {
+    title: '拉出四肢',
+    description: '先合拢拇指和食指，再逐渐张开，让前后脚从黑色身体内部延展出来。',
+    knowledge: '主体之外的枝节和细部由塑制丰富，这种处理称为“头子活”；四肢抓住动势和轮廓就能显出精神。',
+    visibleGroups: ['base', 'body', 'frontLegs', 'backLegs'],
+    enterFrom: null,
+  },
+  'back-mustache': {
+    title: '贴上背部糖衣',
+    description: '先张开拇指和食指，再逐渐并拢，让黄色背部糖衣贴到身体上。',
+    knowledge: '天门糖塑常把糖料压成糖片，再通过剪、贴组成衣纹和装饰；薄处微微透亮，厚处色泽更饱满，贴合处还会保留自然接缝。',
+    enterFrom: null,
+  },
+  'head-block': {
+    title: '出现头部',
+    description: '张开手掌，让红色头部糖块在空中逐渐出现。',
+    knowledge: '天门糖塑重在“传神”：头可以夸张，眼睛和姿态尤其要有精神，让人一眼认出角色的性格。',
+    partTransforms: null,
+    enterFrom: null,
+  },
+  'head-place': {
+    title: '安放头部',
+    description: '先张开手掌准备，再握拳，让头部落到身体前方。',
+    knowledge: '',
+    enterFrom: null,
+  },
+  tail: {
+    title: '出现尾巴和耳朵',
+    description: '先合拢拇指和食指，再逐渐张开，让尾巴和两个耳朵糖片在空中出现。',
+    knowledge: '在这件真实瑞兽作品中，尾巴和两只耳朵都用小弹簧连接；轻轻一动，糖片便会微微颤动，让瑞兽更有神气。',
+    frontView: true,
+    visibleGroups: [
+      'base',
+      'body',
+      'frontLegs',
+      'backLegs',
+      'head',
+      'tail',
+      'ears',
+      'backMustache',
+    ],
+    enterFrom: null,
+  },
+  ears: {
+    title: '贴上尾巴和耳朵',
+    description: '逐渐并拢拇指和食指，让尾巴和两个耳朵贴到瑞兽上。',
+    knowledge: '',
+    visibleGroups: [
+      'base',
+      'body',
+      'frontLegs',
+      'backLegs',
+      'head',
+      'tail',
+      'ears',
+      'backMustache',
+    ],
+    enterFrom: null,
+  },
+  'head-lines': {
+    title: '贴上头部和嘴部糖条',
+    description: '先合拢拇指和食指，再逐渐张开，让红绿糖条贴到头部和嘴部。',
+    knowledge: '梳齿纹、卷曲线和凸起糖条是常见装饰语言；红、绿、黑与糖本色形成明快热烈的民间色彩。',
+    enterFrom: null,
+  },
+  'ball-form': {
+    title: '出现爪下圆球',
+    description: '张开手掌，让圆球糖料在空中逐渐出现。',
+    knowledge: '天门糖塑善用圆球、糖片、糖条等简单形体组合，以有限糖料塑出丰富层次，这正是艺人的“讨巧”。',
+    partTransforms: null,
+    enterFrom: null,
+  },
+  'ball-place': {
+    title: '安放爪下圆球',
+    description: '先张开手掌准备，再握拳，让圆球落到瑞兽爪下。',
+    knowledge: '糖塑曾走进庙会、婚庆和寿诞等生活场景。瑞兽等题材寄托着吉祥、守护和圆满。',
+    enterFrom: null,
+  },
+  complete: {
+    description: '瑞兽主体完成，整件作品将自动旋转一圈并进入赐福。',
+    knowledge: '',
+    showcaseSpin: true,
+    autoAdvanceAfterSpin: true,
+  },
+  'lift-blessing': {
+    description: '先在瑞兽上方张开手掌，再向下移动到瑞兽下方并停留。',
+    knowledge: '天门糖塑植根江汉平原民间生活，作品常以生动造型承载喜庆、吉祥和守护的愿望。',
+  },
+  'fortune-shell': {
+    description: '等待祝福粒子完整显形，再握拳收拢，把这份祝福带走。',
+    knowledge: '',
+  },
+  'blessing-complete': {
+    knowledge: '天门糖塑是国家级非物质文化遗产代表性项目；本体验用于文化感受，不等同于真实高温制作教学。',
+  },
+};
+
+const GESTURE_SETTLE_STEP_IDS = new Set([
+  'base-small',
+  'body-block',
+  'front-legs',
+  'back-mustache',
+  'head-block',
+  'head-place',
+  'tail',
+  'ears',
+  'head-lines',
+  'ball-form',
+  'ball-place',
+]);
+
+export const EXPERIENCE_STEPS = ACTIVE_STEP_IDS.map((id) => {
+  const step = RAW_EXPERIENCE_STEPS.find((item) => item.id === id);
+  return {
+    ...step,
+    ...ACTIVE_STEP_OVERRIDES[id],
+  };
+});
+
 const PART_GROUPS = {
   base: ['base'],
   body: ['body_core'],
@@ -371,14 +562,24 @@ export class BeastStage extends EventTarget {
     this.materialStates = new Map();
     this.activeTransitions = new Map();
     this.showcaseSpin = null;
+    this.gestureSettle = null;
     this.selectedFortune = null;
     this.absorbAnimation = null;
     this.blessingParticles = null;
     this.clock = new THREE.Clock();
+    this.lastInteractionLocked = false;
+    this.interactionPreview = 0;
+    this.interactionPreviewTarget = 0;
+    this.blessingFollowTarget = new THREE.Vector3();
+    this.blessingFollowLastSeenAt = -Infinity;
+    this.blessingFollowRaycaster = new THREE.Raycaster();
+    this.blessingFollowPlane = new THREE.Plane();
     this.particleTexture = this.createParticleTexture();
 
     this.scene = new THREE.Scene();
     this.scene.background = null;
+    this.interactionPreview = 0;
+    this.interactionPreviewTarget = 0;
 
     this.camera = new THREE.PerspectiveCamera(38, 1, 0.01, 100);
     this.camera.position.set(0, 1.1, 3.2);
@@ -476,7 +677,7 @@ export class BeastStage extends EventTarget {
     const size = box.getSize(new THREE.Vector3());
     const center = box.getCenter(new THREE.Vector3());
     const maxAxis = Math.max(size.x, size.y, size.z) || 1;
-    const scale = 1.65 / maxAxis;
+    const scale = MODEL_NORMALIZED_SIZE / maxAxis;
 
     object.scale.setScalar(scale);
     object.position.set(-center.x * scale, -center.y * scale + 0.15, -center.z * scale);
@@ -486,12 +687,17 @@ export class BeastStage extends EventTarget {
     this.stepIndex = THREE.MathUtils.clamp(index, 0, EXPERIENCE_STEPS.length - 1);
     const step = EXPERIENCE_STEPS[this.stepIndex];
     const visiblePartNames = new Set();
-    const blessingStartIndex = EXPERIENCE_STEPS.findIndex((item) => item.id === 'fortune-select');
     this.activeTransitions.clear();
     this.showcaseSpin = null;
+    this.gestureSettle = null;
     this.absorbAnimation = null;
+    this.interactionPreview = 0;
+    this.interactionPreviewTarget = 0;
     this.clearBlessingParticles();
     this.modelRoot.position.y = 0;
+    this.particleRoot.position.set(0, 0, 0);
+    this.blessingFollowTarget.set(0, 0, 0);
+    this.blessingFollowLastSeenAt = -Infinity;
     this.scene.background = null;
 
     for (const groupName of step.visibleGroups) {
@@ -516,9 +722,15 @@ export class BeastStage extends EventTarget {
 
     this.applyStepTransforms(step);
     this.applyEnterTransitions(step);
+    this.applyGesturePreview(step, 0);
+    if (step.id === 'lift-blessing' && !this.selectedFortune) {
+      this.selectedFortune = this.getRandomFortune();
+    }
     this.setModelEthereal(Boolean(step.ethereal));
     if (step.frontView) this.focusFrontView();
-    if (step.showcaseSpin) this.startShowcaseSpin();
+    if (step.showcaseSpin) {
+      this.startShowcaseSpin({ advanceOnComplete: Boolean(step.autoAdvanceAfterSpin) });
+    }
     if (step.id === 'fortune-shell') {
       if (!this.selectedFortune) this.selectedFortune = FORTUNES[0];
       this.createBlessingParticles({ count: BLESSING_POINT_CLOUD_COUNT });
@@ -581,7 +793,7 @@ export class BeastStage extends EventTarget {
         fromScale,
         targetScale,
         start: now,
-        duration: transform.duration ?? 0.75,
+        duration: (transform.duration ?? 0.75) * ANIMATION_TIME_SCALE,
       });
     }
   }
@@ -612,6 +824,270 @@ export class BeastStage extends EventTarget {
     return baseScale.clone().multiplyScalar(scale);
   }
 
+  setGesturePreview(progress) {
+    if (this.isInteractionLocked()) return;
+    this.interactionPreviewTarget = THREE.MathUtils.clamp(progress, 0, 1);
+  }
+
+  setBlessingHandTarget(normalizedX, normalizedY) {
+    const step = EXPERIENCE_STEPS[this.stepIndex];
+    if (step?.id !== 'fortune-shell' || !this.blessingParticles || this.absorbAnimation) return;
+
+    const elapsed = this.clock.getElapsedTime();
+    const gatherTime = elapsed - this.blessingParticles.start;
+    if (gatherTime < POINT_CLOUD_GATHER_DURATION + POINT_CLOUD_STAGGER_DURATION) return;
+
+    const center = this.blessingParticles.center;
+    const planeNormal = this.camera.getWorldDirection(new THREE.Vector3());
+    this.blessingFollowPlane.setFromNormalAndCoplanarPoint(planeNormal, center);
+    this.blessingFollowRaycaster.setFromCamera(
+      new THREE.Vector2(
+        THREE.MathUtils.clamp(normalizedX, 0, 1) * 2 - 1,
+        1 - THREE.MathUtils.clamp(normalizedY, 0, 1) * 2,
+      ),
+      this.camera,
+    );
+
+    const hit = this.blessingFollowRaycaster.ray.intersectPlane(
+      this.blessingFollowPlane,
+      new THREE.Vector3(),
+    );
+    if (!hit) return;
+
+    this.blessingFollowTarget.set(
+      THREE.MathUtils.clamp(hit.x - center.x, -BLESSING_FOLLOW_MAX_X, BLESSING_FOLLOW_MAX_X),
+      THREE.MathUtils.clamp(hit.y - center.y, -BLESSING_FOLLOW_MAX_Y, BLESSING_FOLLOW_MAX_Y),
+      0,
+    );
+    this.blessingFollowLastSeenAt = elapsed;
+  }
+
+  clearBlessingHandTarget() {
+    if (this.clock.getElapsedTime() - this.blessingFollowLastSeenAt < BLESSING_FOLLOW_LOST_GRACE) return;
+    this.blessingFollowTarget.set(0, 0, 0);
+  }
+
+  updateBlessingHandFollow(step) {
+    if (this.absorbAnimation) return;
+    if (step?.id !== 'fortune-shell' || !this.blessingParticles) {
+      this.blessingFollowTarget.set(0, 0, 0);
+    }
+
+    this.particleRoot.position.lerp(this.blessingFollowTarget, BLESSING_FOLLOW_LERP);
+    if (this.particleRoot.position.distanceToSquared(this.blessingFollowTarget) < 0.000001) {
+      this.particleRoot.position.copy(this.blessingFollowTarget);
+    }
+  }
+
+  updateGesturePreview(step) {
+    if (this.activeTransitions.size > 0 || this.showcaseSpin || this.absorbAnimation) return;
+
+    this.interactionPreview = THREE.MathUtils.lerp(
+      this.interactionPreview,
+      this.interactionPreviewTarget,
+      GESTURE_PREVIEW_LERP,
+    );
+    if (Math.abs(this.interactionPreview - this.interactionPreviewTarget) < 0.001) {
+      this.interactionPreview = this.interactionPreviewTarget;
+    }
+    this.applyGesturePreview(step, this.interactionPreview);
+  }
+
+  applyGesturePreview(step, progress) {
+    if (step.id === 'base-small') {
+      const base = this.parts.get('base');
+      if (base) {
+        base.scale.copy(this.baseOriginalScale).multiplyScalar(THREE.MathUtils.lerp(0.52, 1, progress));
+      }
+      return;
+    }
+
+    if (step.id === 'body-block') {
+      this.applyPartPreview('body_core', progress, { offset: [0, 0.42, 0], minScale: 0.55 });
+      return;
+    }
+
+    if (step.id === 'front-legs') {
+      this.applyLegExtensionPreview('front_legs', progress);
+      this.applyLegExtensionPreview('back_legs', progress);
+      return;
+    }
+
+    if (step.id === 'back-mustache') {
+      this.applyPartPreview('back_mustache', progress, {
+        offset: [0, 0.28, -0.18],
+        minScale: 0.68,
+      });
+      return;
+    }
+
+    if (step.id === 'head-block') {
+      this.applyFloatingPartPreview('head', progress, {
+        offset: HEAD_PICKUP_OFFSET,
+        pickupScale: 0.7,
+      });
+      return;
+    }
+
+    if (step.id === 'head-place') {
+      this.applyPartPlacementPreview('head', progress, {
+        offset: HEAD_PICKUP_OFFSET,
+        pickupScale: 0.7,
+      });
+      return;
+    }
+
+    if (step.id === 'tail') {
+      this.applyFloatingPartPreview('tail_ears_1', progress, {
+        offset: TAIL_PICKUP_OFFSET,
+        pickupScale: 0.7,
+      });
+      this.applyFloatingPartPreview('tail_ears_2', progress, {
+        offset: EARS_PICKUP_OFFSET,
+        pickupScale: 0.7,
+      });
+      return;
+    }
+
+    if (step.id === 'ears') {
+      this.applyPartPlacementPreview('tail_ears_1', progress, {
+        offset: TAIL_PICKUP_OFFSET,
+        pickupScale: 0.7,
+      });
+      this.applyPartPlacementPreview('tail_ears_2', progress, {
+        offset: EARS_PICKUP_OFFSET,
+        pickupScale: 0.7,
+      });
+      return;
+    }
+
+    if (step.id === 'head-lines') {
+      this.applyPartPreview('head_lines', progress, {
+        offset: HEAD_LINES_PICKUP_OFFSET,
+        minScale: 0.74,
+      });
+      return;
+    }
+
+    if (step.id === 'ball-form') {
+      this.applyBallAppearPreview(progress);
+      return;
+    }
+
+    if (step.id === 'ball-place') {
+      this.applyBallPlacementPreview(progress);
+      return;
+    }
+
+    if (step.id === 'lift-blessing') {
+      this.modelRoot.position.y = THREE.MathUtils.lerp(0, 0.18, progress);
+      return;
+    }
+
+    this.modelRoot.position.y = 0;
+  }
+
+  applyPartPreview(partName, progress, { offset = [0, 0, 0], minScale = 0.6 } = {}) {
+    const part = this.parts.get(partName);
+    const original = this.originalPartTransforms.get(partName);
+    if (!part || !original) return;
+
+    const remaining = 1 - THREE.MathUtils.clamp(progress, 0, 1);
+    part.position.copy(original.position).addScaledVector(new THREE.Vector3(...offset), remaining);
+    part.rotation.copy(original.rotation);
+    part.scale.copy(original.scale);
+
+    if (Array.isArray(minScale)) {
+      part.scale.multiply(new THREE.Vector3(
+        THREE.MathUtils.lerp(minScale[0], 1, progress),
+        THREE.MathUtils.lerp(minScale[1], 1, progress),
+        THREE.MathUtils.lerp(minScale[2], 1, progress),
+      ));
+    } else {
+      part.scale.multiplyScalar(THREE.MathUtils.lerp(minScale, 1, progress));
+    }
+  }
+
+  applyFloatingPartPreview(partName, progress, { offset, pickupScale = 0.7 }) {
+    const part = this.parts.get(partName);
+    const original = this.originalPartTransforms.get(partName);
+    if (!part || !original) return;
+
+    const normalized = THREE.MathUtils.clamp(progress, 0, 1);
+    const eased = normalized * normalized * (3 - 2 * normalized);
+    part.visible = normalized > 0.015;
+    part.position.copy(original.position).add(new THREE.Vector3(...offset));
+    part.rotation.copy(original.rotation);
+    part.scale.copy(original.scale).multiplyScalar(
+      THREE.MathUtils.lerp(pickupScale * 0.18, pickupScale, eased),
+    );
+  }
+
+  applyPartPlacementPreview(partName, progress, { offset, pickupScale = 0.7 }) {
+    const part = this.parts.get(partName);
+    const original = this.originalPartTransforms.get(partName);
+    if (!part || !original) return;
+
+    const normalized = THREE.MathUtils.clamp(progress, 0, 1);
+    const eased = normalized * normalized * (3 - 2 * normalized);
+    const pickupPosition = original.position.clone().add(new THREE.Vector3(...offset));
+    part.visible = true;
+    part.position.lerpVectors(pickupPosition, original.position, eased);
+    part.rotation.copy(original.rotation);
+    part.scale.copy(original.scale).multiplyScalar(
+      THREE.MathUtils.lerp(pickupScale, 1, eased),
+    );
+  }
+
+  applyLegExtensionPreview(partName, progress) {
+    const part = this.parts.get(partName);
+    const original = this.originalPartTransforms.get(partName);
+    if (!part || !original) return;
+
+    const normalized = THREE.MathUtils.clamp(progress, 0, 1);
+    const eased = normalized * normalized * (3 - 2 * normalized);
+    const sourcePosition = this.getTransitionStartPosition(part, original.position, {
+      sourcePart: 'body_core',
+      sourceOffset: [0, -0.06, 0],
+    });
+
+    part.visible = normalized > 0.015;
+    part.position.lerpVectors(sourcePosition, original.position, eased);
+    part.rotation.copy(original.rotation);
+    part.scale.copy(original.scale).multiply(new THREE.Vector3(
+      THREE.MathUtils.lerp(0.16, 1, eased),
+      THREE.MathUtils.lerp(0.035, 1, eased),
+      THREE.MathUtils.lerp(0.16, 1, eased),
+    ));
+  }
+
+  applyBallAppearPreview(progress) {
+    const part = this.parts.get('ball');
+    const original = this.originalPartTransforms.get('ball');
+    if (!part || !original) return;
+
+    const normalized = THREE.MathUtils.clamp(progress, 0, 1);
+    const eased = normalized * normalized * (3 - 2 * normalized);
+    part.visible = normalized > 0.015;
+    part.position.copy(original.position).add(new THREE.Vector3(...BALL_PICKUP_OFFSET));
+    part.rotation.copy(original.rotation);
+    part.scale.copy(original.scale).multiplyScalar(THREE.MathUtils.lerp(0.05, 0.7, eased));
+  }
+
+  applyBallPlacementPreview(progress) {
+    const part = this.parts.get('ball');
+    const original = this.originalPartTransforms.get('ball');
+    if (!part || !original) return;
+
+    const normalized = THREE.MathUtils.clamp(progress, 0, 1);
+    const eased = normalized * normalized * (3 - 2 * normalized);
+    const pickupPosition = original.position.clone().add(new THREE.Vector3(...BALL_PICKUP_OFFSET));
+    part.visible = true;
+    part.position.lerpVectors(pickupPosition, original.position, eased);
+    part.rotation.copy(original.rotation);
+    part.scale.copy(original.scale).multiplyScalar(THREE.MathUtils.lerp(0.7, 1, eased));
+  }
+
   focusFrontView() {
     this.camera.position.set(0, 1.1, 3.2);
     this.controls.target.set(0, 0.35, 0);
@@ -619,35 +1095,88 @@ export class BeastStage extends EventTarget {
     this.modelRoot.rotation.y = MODEL_DISPLAY_ROTATION_Y;
   }
 
-  startShowcaseSpin() {
+  startShowcaseSpin({ advanceOnComplete = false } = {}) {
+    if (this.showcaseSpin) return false;
+
     this.showcaseSpin = {
       start: this.clock.getElapsedTime(),
-      duration: 2.4,
+      duration: 2.4 * ANIMATION_TIME_SCALE,
       from: MODEL_DISPLAY_ROTATION_Y,
       to: MODEL_DISPLAY_ROTATION_Y + Math.PI * 2,
+      advanceOnComplete,
     };
+    this.emitInteractionStateIfChanged(true);
+    return true;
+  }
+
+  advanceToLiftBlessing() {
+    this.selectedFortune = this.getRandomFortune();
+    const liftIndex = EXPERIENCE_STEPS.findIndex((step) => step.id === 'lift-blessing');
+    this.setStep(liftIndex >= 0 ? liftIndex : this.stepIndex + 1);
   }
 
   next() {
     const step = EXPERIENCE_STEPS[this.stepIndex];
+    const isFinalStep = this.stepIndex >= EXPERIENCE_STEPS.length - 1;
 
-    if (step.id === 'fortune-select') {
-      this.selectFortune(this.selectedFortune?.id ?? DEFAULT_FORTUNE_ID);
-      return;
+    if (isFinalStep || this.isInteractionLocked()) return false;
+
+    if (step.id === 'complete') {
+      return this.startShowcaseSpin({ advanceOnComplete: true });
     }
 
     if (step.id === 'lift-blessing') {
       if (!this.selectedFortune) this.selectedFortune = FORTUNES[0];
       this.setStep(this.stepIndex + 1);
-      return;
+      return true;
     }
 
     if (step.id === 'fortune-shell') {
       this.startAbsorbFortune();
-      return;
+      this.emitInteractionStateIfChanged(true);
+      return true;
+    }
+
+    if (GESTURE_SETTLE_STEP_IDS.has(step.id)) {
+      return this.startGestureSettle();
     }
 
     this.setStep(this.stepIndex + 1);
+    return true;
+  }
+
+  startGestureSettle() {
+    if (this.gestureSettle) return false;
+
+    this.interactionPreviewTarget = 1;
+    this.gestureSettle = {
+      start: this.clock.getElapsedTime(),
+      duration: GESTURE_SETTLE_DURATION,
+      from: this.interactionPreview,
+      nextIndex: this.stepIndex + 1,
+    };
+    this.emitInteractionStateIfChanged(true);
+    return true;
+  }
+
+  updateGestureSettle(elapsed, step) {
+    if (!this.gestureSettle) return;
+
+    const progress = THREE.MathUtils.clamp(
+      (elapsed - this.gestureSettle.start) / this.gestureSettle.duration,
+      0,
+      1,
+    );
+    const eased = progress * progress * (3 - 2 * progress);
+    this.interactionPreview = THREE.MathUtils.lerp(this.gestureSettle.from, 1, eased);
+    this.interactionPreviewTarget = 1;
+    this.applyGesturePreview(step, this.interactionPreview);
+
+    if (progress >= 1) {
+      const nextIndex = this.gestureSettle.nextIndex;
+      this.gestureSettle = null;
+      this.setStep(nextIndex);
+    }
   }
 
   prev() {
@@ -666,13 +1195,17 @@ export class BeastStage extends EventTarget {
 
   selectFortune(fortuneId) {
     this.selectedFortune = FORTUNES.find((fortune) => fortune.id === fortuneId) ?? FORTUNES[0];
-    const fortuneIndex = EXPERIENCE_STEPS.findIndex((step) => step.id === 'fortune-select');
+    const liftIndex = EXPERIENCE_STEPS.findIndex((step) => step.id === 'lift-blessing');
 
-    if (this.stepIndex <= fortuneIndex) {
-      this.setStep(fortuneIndex + 1);
+    if (liftIndex >= 0 && this.stepIndex < liftIndex) {
+      this.setStep(liftIndex);
     } else {
       this.dispatchEvent(new CustomEvent('stepchange', { detail: this.getState() }));
     }
+  }
+
+  getRandomFortune() {
+    return FORTUNES[Math.floor(Math.random() * FORTUNES.length)] ?? FORTUNES[0];
   }
 
   getFortuneParticleProfile() {
@@ -948,7 +1481,7 @@ export class BeastStage extends EventTarget {
 
     this.absorbAnimation = {
       start: this.clock.getElapsedTime(),
-      duration: 2.4,
+      duration: (2.4 * ANIMATION_TIME_SCALE) / BLESSING_ABSORB_SPEED_MULTIPLIER,
       origins,
       orbs,
       targets,
@@ -968,6 +1501,9 @@ export class BeastStage extends EventTarget {
       this.blessingParticles.trail.material.dispose();
     }
     this.blessingParticles = null;
+    this.particleRoot.position.set(0, 0, 0);
+    this.blessingFollowTarget.set(0, 0, 0);
+    this.blessingFollowLastSeenAt = -Infinity;
   }
 
   captureMaterialStates() {
@@ -1011,8 +1547,31 @@ export class BeastStage extends EventTarget {
       steps: EXPERIENCE_STEPS,
       fortunes: FORTUNES,
       selectedFortune: this.selectedFortune,
+      interactionLocked: this.isInteractionLocked(),
       report: this.getReport(),
     };
+  }
+
+  isInteractionLocked() {
+    if (this.showcaseSpin || this.gestureSettle || this.absorbAnimation || this.activeTransitions.size > 0) return true;
+
+    const step = EXPERIENCE_STEPS[this.stepIndex];
+    if (step?.id === 'fortune-shell' && this.blessingParticles) {
+      const gatherTime = this.clock.getElapsedTime() - this.blessingParticles.start;
+      return gatherTime < POINT_CLOUD_GATHER_DURATION + POINT_CLOUD_STAGGER_DURATION;
+    }
+
+    return false;
+  }
+
+  emitInteractionStateIfChanged(force = false) {
+    const interactionLocked = this.isInteractionLocked();
+    if (!force && interactionLocked === this.lastInteractionLocked) return;
+
+    this.lastInteractionLocked = interactionLocked;
+    this.dispatchEvent(new CustomEvent('interactionchange', {
+      detail: { interactionLocked, state: this.getState() },
+    }));
   }
 
   getReport() {
@@ -1037,9 +1596,13 @@ export class BeastStage extends EventTarget {
     const elapsed = this.clock.getElapsedTime();
     const step = EXPERIENCE_STEPS[this.stepIndex];
     this.updateModelRotation(elapsed, step);
+    this.updateBlessingHandFollow(step);
     this.updateTransitions(elapsed);
+    this.updateGesturePreview(step);
+    this.updateGestureSettle(elapsed, step);
     this.updateBlessingParticles(elapsed);
     this.updateAbsorbAnimation(elapsed);
+    this.emitInteractionStateIfChanged();
     this.controls.update();
     this.renderer.render(this.scene, this.camera);
   };
@@ -1232,7 +1795,11 @@ export class BeastStage extends EventTarget {
 
       if (progress >= 1) {
         this.modelRoot.rotation.y = MODEL_DISPLAY_ROTATION_Y;
+        const shouldAdvance = this.showcaseSpin.advanceOnComplete;
         this.showcaseSpin = null;
+        if (shouldAdvance) {
+          this.advanceToLiftBlessing();
+        }
       }
 
       return;

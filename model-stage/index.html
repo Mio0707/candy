@@ -6,31 +6,69 @@
     <title>吹糖造物模型舞台</title>
     <script type="module" src="./src/main.js"></script>
   </head>
-  <body>
+  <body class="formal-mode">
+    <section id="intro-overlay" class="intro-overlay" aria-labelledby="intro-title">
+      <div class="intro-card">
+        <p class="eyebrow">非遗天门糖塑互动体验</p>
+        <h2 id="intro-title">用双手，唤醒一只糖塑瑞兽</h2>
+        <p class="intro-lead">跟随 6 个造物阶段，用张掌、握拳和两指开合，让糖料一步步成形。约 2 分钟完成。</p>
+        <div class="heritage-identity" aria-label="天门糖塑非遗身份">
+          <span>国家级非遗</span>
+          <span>湖北天门</span>
+          <span>传统美术 · Ⅶ—88</span>
+        </div>
+        <p class="heritage-intro">它植根江汉平原民间生活，用“吹”撑起饱满体量，用“塑”完成灵动细节，让一团麦芽糖承载吉祥与守护的心愿。</p>
+        <div class="gesture-guide" aria-label="三个主要手势">
+          <div><strong>01</strong><span>张开手掌</span><small>唤出糖料</small></div>
+          <div><strong>02</strong><span>握紧拳头</span><small>鼓起与安放</small></div>
+          <div><strong>03</strong><span>两指开合</span><small>拉伸与贴合</small></div>
+        </div>
+        <div class="intro-actions">
+          <button id="start-camera" type="button" class="primary">开启摄像头体验</button>
+          <button id="start-buttons" type="button">使用按钮体验</button>
+        </div>
+        <p class="intro-note">摄像头画面只在当前设备中用于手势识别；若授权失败，仍可使用按钮完成体验。</p>
+      </div>
+    </section>
     <main class="stage-shell">
       <section class="stage-view" aria-label="模型舞台">
         <video id="camera-background" class="camera-background" autoplay muted playsinline></video>
         <div class="camera-overlay"></div>
         <div id="beast-stage"></div>
+        <div id="stage-ritual-prompt" class="stage-ritual-prompt" aria-live="polite"></div>
+        <div id="stage-gesture-hint" class="stage-gesture-hint" aria-live="polite"></div>
+        <canvas id="gesture-overlay" class="gesture-overlay" aria-hidden="true"></canvas>
         <div class="stage-loading" id="loading-panel">模型加载中...</div>
-        <div class="camera-status" id="camera-status">等待摄像头授权</div>
+        <div class="camera-status" id="camera-status" hidden>等待摄像头授权</div>
+        <div id="gesture-feedback" class="gesture-feedback" aria-live="polite">
+          <strong id="gesture-sequence">张开手掌 → 握紧拳头</strong>
+          <span id="gesture-state">等待开始体验</span>
+        </div>
       </section>
 
       <aside class="stage-panel">
+        <div class="debug-mode-toolbar" aria-label="调试模式工具栏">
+          <strong>调试模式</strong>
+          <a href="./">返回正式体验</a>
+        </div>
         <p class="eyebrow">非遗天门糖塑交互体验</p>
         <h1>吹糖造物</h1>
+        <nav class="phase-progress" aria-label="造物进度">
+          <div id="phase-progress-track" class="phase-progress-track"></div>
+          <p id="phase-progress-copy" class="phase-progress-copy">第 1 阶段，共 6 阶段</p>
+        </nav>
         <section class="copy-section">
-          <p class="copy-label">步骤标题</p>
+          <p id="step-chapter" class="copy-label">第 1 阶段 · 底座</p>
           <p id="step-title" class="step-title">准备中</p>
         </section>
         <section class="copy-section">
-          <p class="copy-label">手势提醒</p>
+          <p class="copy-label">请这样做</p>
           <p id="step-description" class="step-description">
             正在读取瑞兽模型。
           </p>
         </section>
         <section class="knowledge-card">
-          <p class="copy-label">糖塑小识</p>
+          <p class="copy-label">天门糖塑小识</p>
           <p id="sugar-knowledge" class="sugar-knowledge">
             灵感来自国家级非遗天门糖塑。
           </p>
@@ -43,8 +81,70 @@
           <button id="show-all" type="button">显示全部</button>
         </div>
 
+        <div id="completion-actions" class="completion-actions" hidden>
+          <button id="restart-experience" type="button" class="primary">再造一只</button>
+          <button id="toggle-result-focus" type="button">全屏定格</button>
+          <p id="completion-summary">你用双手完成了一只属于自己的糖塑瑞兽。</p>
+          <details class="heritage-story">
+            <summary>了解天门糖塑的故事</summary>
+            <p class="heritage-story-lead">你体验的是数字化的吹、塑与拼接。真实技艺由传承人在长期实践中代代相传。</p>
+            <div class="heritage-story-grid">
+              <article>
+                <strong>来自湖北天门</strong>
+                <p>天门糖塑是国家级非遗代表性项目，属于传统美术，植根江汉平原民间生活。</p>
+              </article>
+              <article>
+                <strong>吹与塑的配合</strong>
+                <p>“吹”撑起中空主体，“塑”完成耳朵、纹样与神态，不同于平面的糖画。</p>
+              </article>
+              <article>
+                <strong>会动的糖塑</strong>
+                <p>这件真实瑞兽的尾巴和两只耳朵都用弹簧连接，轻轻一动，便多了一份神气。</p>
+              </article>
+              <article>
+                <strong>技艺由人传下来</strong>
+                <p>传承人通过授徒、展演和校园研学，让天门糖塑继续走进年轻人的生活。</p>
+              </article>
+            </div>
+          </details>
+        </div>
+
+        <section class="camera-debug" aria-live="polite">
+          <div class="camera-debug-header">
+            <p class="copy-label">摄像头调试</p>
+            <button id="retry-camera" type="button">重试</button>
+          </div>
+          <pre id="camera-debug-output">等待检测...</pre>
+        </section>
+
+        <section class="gesture-debug" aria-live="polite">
+          <div class="gesture-debug-header">
+            <p class="copy-label">手势识别</p>
+            <button id="toggle-gesture" type="button">暂停</button>
+          </div>
+          <div class="gesture-meter" aria-hidden="true">
+            <span id="gesture-meter-fill"></span>
+          </div>
+          <pre id="gesture-debug-output">等待摄像头...</pre>
+          <div class="calibration-controls">
+            <button id="toggle-calibration" type="button">校准模式</button>
+            <select id="calibration-target" aria-label="选择要校准的手势">
+              <option value="fist">握拳</option>
+              <option value="open">张掌</option>
+              <option value="pinch">捏合</option>
+              <option value="thumb-index-spread">拇指食指张开</option>
+              <option value="thumb-index-close">拇指食指并拢</option>
+              <option value="down">向下移动</option>
+              <option value="swipe">横向轻扫</option>
+              <option value="hold">停留</option>
+            </select>
+            <button id="reset-calibration" type="button">清空采样</button>
+          </div>
+          <pre id="calibration-output">校准模式未开启</pre>
+        </section>
+
         <div class="fortune-panel" id="fortune-panel" hidden>
-          <p class="fortune-title">选择祝福</p>
+          <p class="fortune-title">本次随机祝福</p>
           <div class="fortune-options" id="fortune-options"></div>
           <p class="fortune-description" id="fortune-description"></p>
         </div>
